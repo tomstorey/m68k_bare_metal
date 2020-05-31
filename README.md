@@ -59,7 +59,7 @@ The first thing you will need to do is install `git`, a compiler, and `make`.
 
 From here, clone my repository to grab all of the files you need.
 
-    git clone git@github.com:tomstorey/m68k_bare_metal.git
+    git clone https://github.com/tomstorey/m68k_bare_metal.git
 
 Thats all you need to do to get started.
 

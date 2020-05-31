@@ -47,7 +47,7 @@ crt: crt0.o
 	$(AS) -o crt0.o $(AFLAGS) crt0.s
 
 clean:
-	rm -f bmbinary bmbinary.bin $(OBJ) $(DEP)
+	rm -f bmbinary bmbinary.rom $(OBJ) $(DEP)
 
 rom:
 	m68k-linux-gnu-objcopy -O binary bmbinary bmbinary.rom
