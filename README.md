@@ -24,14 +24,14 @@ There are a lot of tools out there that can create cross compiler environments f
 
 But as a lowly hobbyist that dabbles in both software and hardware and is certainly a master of neither, I find these tools quite complicated and often hard to get my head around what they are doing and how to use them. I want something simpler.
 
-## My solution
+## My Solution
 My solution to the problem was to create something (hopefully) so simple that ideally anyone else like me out there could understand how it is working, and also be able to modify it to suit their needs.
 
 In my solution, I want to take some C source files (and perhaps some assembly source files, too), compile them, link them together, and produce a binary image out the other side that can be loaded directly into EEPROM and placed into a system and run.
 
-To achieve this I have made a minimal linker script that allows you to position and dimension your ROM and RAM memories as required. The linker script also pulls in a reasonably vanilla flavoured `crt0` that I made.
+To achieve this I have made a minimal linker script that allows you to position and dimension your ROM and RAM memories as required. The linker script also pulls in a reasonably vanilla flavoured `crt0` that I made, creates the reset vector and builds an interrupt/exception vector table.
 
-Also included is a `Makefile` to help make building your code easier. Essentially the only thing you need to do with the Makefile is list each of the object file names that will be linked together to produce your binary (the compiler, `gcc` in my case, takes care of working out the details).
+Also included is a `Makefile` to help make building your code easier. Essentially the only thing you need to do with the Makefile is list each of the object file names that will be linked together to produce your binary (the compiler, `gcc` in my case, takes care of working out the details including dependencies for C source files).
 
 Other than that, you just start writing code and run `make`! I think that's pretty simple.
 
@@ -54,8 +54,6 @@ The first thing you will need to do is install `git`, a compiler, and `make`.
     root@ubuntu:~# exit
     logout
     tom@ubuntu:~$
-
-**Note:** I have encountered issues with binutils 2.34, I get complaints from the linker about overlapping sections, therefore I recommend something like 2.30 or 2.31 which are available with Ubuntu 18.04 and Debian 10 respectively, and I have successfully built binaries with these distributions. I also have anecdotal evidence that under Windows 10 and WSL the linking process also works just fine.
 
 From here, clone my repository to grab all of the files you need.
 
@@ -82,7 +80,7 @@ Once you have done this, the first thing to do is to assemble `crt0.s`.
 
     tom@ubuntu:~/m68k_bare_metal/myproject$ make crt
 
-You'll then notice a file called `crt.o` in your project directory. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build) testing and zeroising RAM, copying the values of initialised variables into their appropriate memory locations, calling soft and hard initialisation hooks, and then jumps to your `main()` routine. In an application build, `crt0` only copies initialised variables into RAM and zeroises the .bss section (uninitialised variables).
+You'll then notice a file called `crt.o` in your project directory. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build) testing and zeroising RAM, copying the values of initialised variables into their appropriate memory locations, calling soft and hard initialisation hooks, and then jumps to your `main()` routine. In an application build, `crt0` only copies initialised variables into RAM, zeroises the .bss section (uninitialised variables) and jumps to `main()`.
 
 ### Linker script
 The default linker script configuration places ROM at address 0 with a size of 0x100000 (1 megabyte), and RAM at 0x100000 with a size of 0x100000. You may need to modify these values to suit your systems memory layout.
@@ -100,7 +98,7 @@ Both the SSP and initial PC values are stored as the very first two long words i
 
 The linker script also generates an interrupt and exception vector table (IVT), and this will be located through addresses 0x8-0x3FF (8-1023) in the ROM. Each entry in the IVT is a long word which points to an address where the code that handles that exception or interrupt is located. When an interrupt or execption occurrs, the processor reads the corresponding IVT entry and then jumps to the address contained within.
 
-All of the documented exception vectors are pre-configured in the linker script, but if you need to add more, e.g. for your UARTs and other devices, then they can be defined manually in the linker script. See the documentation included within for an example of how to do that.
+All of the documented exception vectors are pre-configured in the linker script, but if you need to add more, e.g. for your UARTs and other devices, then they can be defined manually in the linker script. See the documentation included within the linker script for an example of how to do that.
 
 Note that while the ROM does not have to always exist from address 0, it will need to exist there initially as the m68k needs to read the SSP and initial PC values starting from address 0. If you require RAM to be located at address 0 in your system, you will need to implement circuitry or some other means to switch the ROM to a higher address after some number of bytes are read, or after accessing a certain memory address or region. You will also then need to ensure that address range 0x8-0x3FF in RAM is populated with the IVT required for your system - this could either be copied from the ROM, or initialised through software.
 
@@ -153,18 +151,20 @@ The default handler simply resets the processor, but this is not likely to be th
 
 The linker script builds the IVT based on the presence or absence of each expected service routine. If a service routine is not defined, then its vector table entry points to `__DefaultInterrupt`, otherwise the entry points to the memory address of the routine.
 
-You can of course modify `__DefaultInterrupt` if you desire some other default behaviour.
+You can of course modify `__DefaultInterrupt` if you desire some other default behaviour than a reset.
 
 ## Exception handling routines
 If you look in `platform.ld` you will see a list of all of the exception handling routine names that are expected. These can be changed if you would prefer different names.
 
 To ensure that your code handles each exception in the way you would prefer, simply create a routine with the name as described in the linker script. For example, if you would like to handle a divide by zero exception, you would create the following routine:
 
-    void __attribute__((interrupt))
-    ZeroDivide(void)
-    {
-        /* Your code here */
-    }
+```c
+void __attribute__((interrupt))
+ZeroDivide(void)
+{
+    /* Your code here */
+}
+```
 
 Exception handlers do not return a value, so they are void. They also do not take any parameters. `__attribute__((interrupt))` tells the compiler to insert the correct return instruction, `rte` instead of `rts`, when returning from an interrupt.
 
@@ -187,15 +187,17 @@ As you can see, rather than pointing to the default interrupt handler at 0x00000
 And thats basically all there is to that. Happy error handling!
 
 ## Interrupt Service Routines
-To handle an interrupt, you must also create an ISR routine, and also create the appropriate vector table entry in the linker script.
+To handle an interrupt, you must create an ISR, and also create the appropriate vector table entry in the linker script.
 
 To begin with, in your C file, you can create your ISR as follows:
 
-    void __attribute__((interrupt))
-    my_interrupt_handler(void)
-    {
-        /* Your code here */
-    }
+```c
+void __attribute__((interrupt))
+my_interrupt_handler(void)
+{
+    /* Your code here */
+}
+```
 
 And like exception handlers, ISRs return nothing and have no parameters, so are void. Likewise, the interrupt attribute tells the compiler to use the correct return instruction for this routine.
 
@@ -231,3 +233,4 @@ Please file an issue with me for any questions you have, I'll do my best to help
 
 ## TODOs
  - Integrate a GDB stub for debugging
+ - Reserve/define some stack and heap space
