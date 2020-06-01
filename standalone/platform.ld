@@ -5,10 +5,10 @@
  *   base indicates at what address a memory begins
  *   sz indicates the size of that memory
  */
-PROVIDE(__rom_base = 0);
-PROVIDE(__rom_sz = 0x100000);
-PROVIDE(__ram_base = 0x100000);
-PROVIDE(__ram_sz = 0x100000);
+__rom_base = 0;
+__rom_sz = 0x100000;
+__ram_base = 0x100000;
+__ram_sz = 0x100000;
 
 /*
  * Dont modify below this line (unless you know what youre doing),
