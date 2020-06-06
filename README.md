@@ -206,8 +206,14 @@ Now, in the linker script you will need to create an entry to be placed in the I
 Therefore we add the following to the linker script:
 
 ```
-. = 0x1F8;
-LONG(ABSOLUTE(my_interrupt_handler));
+SECTIONS {
+	...
+    .ivt : {
+	...
+        . = 0x1F8;
+        LONG(ABSOLUTE(my_interrupt_handler));
+    } > ivt
+}
 ```
 
 Re-compiling our code and inspecting the disassembly we should then expect to see something like the following:
