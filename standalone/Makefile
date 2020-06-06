@@ -14,13 +14,17 @@
 # The compiler will automatically choose the correct source file (.c, .s etc)
 # according to the object file (.o) to be created.
 
+PREFIX=m68k-linux-gnu
+
 OBJ=main.o
 
 # Dont modify below this line (unless you know what youre doing).
 
-CC=m68k-linux-gnu-gcc
-AS=m68k-linux-gnu-as
-LD=m68k-linux-gnu-ld
+CC=$(PREFIX)-gcc
+AS=$(PREFIX)-as
+LD=$(PREFIX)-ld
+OBJCOPY=$(PREFIX)-objcopy
+OBJDUMP=$(PREFIX)-objdump
 
 CFLAGS=-m68000 -Wall -g -static -I. -msoft-float -MMD -MP
 LFLAGS=--script=platform.ld
@@ -50,17 +54,17 @@ clean:
 	rm -f bmbinary bmbinary.rom $(OBJ) $(DEP)
 
 rom:
-	m68k-linux-gnu-objcopy -O binary bmbinary bmbinary.rom
+	$(OBJCOPY) -O binary bmbinary bmbinary.rom
 
 dump:
-	m68k-linux-gnu-objdump -belf32-m68k -st -j.reset -j.ivt bmbinary
-	m68k-linux-gnu-objdump -belf32-m68k -dt -j.text bmbinary
-	m68k-linux-gnu-objdump -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -belf32-m68k -st -j.reset -j.ivt bmbinary
+	$(OBJDUMP) -belf32-m68k -dt -j.text bmbinary
+	$(OBJDUMP) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 dumps:
-	m68k-linux-gnu-objdump -belf32-m68k -st -j.reset -j.ivt bmbinary
-	m68k-linux-gnu-objdump -belf32-m68k -St -j.text bmbinary
-	m68k-linux-gnu-objdump -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -belf32-m68k -st -j.reset -j.ivt bmbinary
+	$(OBJDUMP) -belf32-m68k -St -j.text bmbinary
+	$(OBJDUMP) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 hexdump:
 	hexdump -C bmbinary.rom
