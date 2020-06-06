@@ -1,12 +1,13 @@
+
 # Bare Metal m68k Cross Compiler "Toolchain"
 - [Bare Metal m68k Cross Compiler "Toolchain"](#bare-metal-m68k-cross-compiler--toolchain-)
   * [Motivation](#motivation)
   * [My solution](#my-solution)
   * [How To Use](#how-to-use)
-    + [Get started](#get-started)
-    + [Create a "project"](#create-a--project-)
+    + [Get started (installation)](#get-started-installation)
+    + [Create a "project"](#create-a-project)
     + [Linker script](#linker-script)
-    + [Write some code already...](#write-some-code-already)
+    + [Write some code already...](#write-some-code-already...)
   * [Additional tools](#additional-tools)
 - [Advanced Topics](#advanced-topics)
   * [Default interrupt handler](#default-interrupt-handler)
@@ -43,42 +44,35 @@ There are two different "build environment flavours" that you can choose from:
 
 The idea behind these two different builds comes down to how you might build and write software for a bare metal system. For example, you may use a standalone build to implement some kind of operating system or monitor, and perhaps this allows you to load in code over a serial link and execute it. That code may be some kind of application that you want to test and debug, and which itself does not require a reset vector or IVT.
 
-### Get started
-The first thing you will need to do is install `git`, a compiler, and `make`.
+### Get started (installation)
+You can build or install the required tools on a variety of operating systems. Installation instructions are broken out by operating system (or group of) as each is a little different to the last, so please refer to the appropriate INSTALL-xxxx.md file in this repo.
 
-    tom@ubuntu:~$ sudo su -
-    [sudo] password for tom:
-    root@ubuntu:~# apt install git
-    root@ubuntu:~# apt install gcc-m68k-linux-gnu
-    root@ubuntu:~# apt install make
-    root@ubuntu:~# exit
-    logout
-    tom@ubuntu:~$
+At the time of writing, the tool chain is known to work on the following operating systems:
 
-From here, clone my repository to grab all of the files you need.
-
-    git clone https://github.com/tomstorey/m68k_bare_metal.git
-
-Thats all you need to do to get started.
+ - Ubuntu 18.04 and 20.04
+ - Debian 9.12 and 10
+ - Windows 10 with WSL
+ - macOS Catalina (10.15)
 
 ### Create a "project"
-Really this is just as simple as making a copy of either the standalone or application directory, and naming it appropriately. You'll then work on the files in this directory.
+Really this is just as simple as making a copy of either the `standalone` or `application` directory, and naming it appropriately. You'll then work on the files in this directory.
 
-    tom@ubuntu:~$ cd m68k_bare_metal
-    tom@ubuntu:~/m68k_bare_metal$ cp -a standalone myproject
-    tom@ubuntu:~/m68k_bare_metal$ cd myproject
-    tom@ubuntu:~/m68k_bare_metal/myproject$ ls -la
-    total 28
-    drwxr-xr-x 2 tom tom 4096 May 31 14:52 .
-    drwxr-xr-x 6 tom tom 4096 May 31 14:53 ..
-    -rw-r--r-- 1 tom tom 1456 May 31 14:52 Makefile
-    -rw-r--r-- 1 tom tom 3376 May 31 14:52 crt0.s
-    -rw-r--r-- 1 tom tom   54 May 31 14:52 main.c
-    -rw-r--r-- 1 tom tom 5540 May 31 14:52 platform.ld
+```
+~$ cd m68k_bare_metal
+~/m68k_bare_metal$ cp -a standalone myproject
+~/m68k_bare_metal$ cd myproject
+~/m68k_bare_metal/myproject$ ls -la
+-rw-r--r-- 1 tom tom 1456 May 31 14:52 Makefile
+-rw-r--r-- 1 tom tom 3376 May 31 14:52 crt0.s
+-rw-r--r-- 1 tom tom   54 May 31 14:52 main.c
+-rw-r--r-- 1 tom tom 5540 May 31 14:52 platform.ld
+```
 
 Once you have done this, the first thing to do is to assemble `crt0.s`.
 
-    tom@ubuntu:~/m68k_bare_metal/myproject$ make crt
+```
+~/m68k_bare_metal/myproject$ make crt
+```
 
 You'll then notice a file called `crt.o` in your project directory. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build) testing and zeroising RAM, copying the values of initialised variables into their appropriate memory locations, calling soft and hard initialisation hooks, and then jumps to your `main()` routine. In an application build, `crt0` only copies initialised variables into RAM, zeroises the .bss section (uninitialised variables) and jumps to `main()`.
 
@@ -109,21 +103,20 @@ Ok, with all of the setup of your environment completed, you can now being to wr
 
 Included is a very simple `main.c`, so you can test that everything is working simply by running `make`. If all is successful, you should see a file called `bmbinary`.
 
-    tom@ubuntu:~/m68k_bare_metal/myproject$ make
-    m68k-linux-gnu-gcc -m68000 -Wall -g -static -I. -msoft-float -MMD -MP -c -o main.o main.c
-    m68k-linux-gnu-ld -o bmbinary main.o --script=platform.ld
-    tom@ubuntu:~/m68k_bare_metal/myproject$ ls -la
-    total 52
-    drwxr-xr-x 2 tom tom  4096 May 31 14:54 .
-    drwxr-xr-x 6 tom tom  4096 May 31 14:53 ..
-    -rw-r--r-- 1 tom tom  1456 May 31 14:52 Makefile
-    -rwxrwxr-x 1 tom tom 19056 May 31 14:54 bmbinary
-    -rw-rw-r-- 1 tom tom  2136 May 31 14:53 crt0.o
-    -rw-r--r-- 1 tom tom  3376 May 31 14:52 crt0.s
-    -rw-r--r-- 1 tom tom    54 May 31 14:52 main.c
-    -rw-rw-r-- 1 tom tom    15 May 31 14:54 main.d
-    -rw-rw-r-- 1 tom tom  2112 May 31 14:54 main.o
-    -rw-r--r-- 1 tom tom  5540 May 31 14:52 platform.ld
+```
+~/m68k_bare_metal/myproject$ make
+m68k-linux-gnu-gcc -m68000 -Wall -g -static -I. -msoft-float -MMD -MP -c -o main.o main.c
+m68k-linux-gnu-ld -o bmbinary main.o --script=platform.ld
+~/m68k_bare_metal/myproject$ ls -la
+-rw-r--r-- 1 tom tom  1456 May 31 14:52 Makefile
+-rwxrwxr-x 1 tom tom 19056 May 31 14:54 bmbinary
+-rw-rw-r-- 1 tom tom  2136 May 31 14:53 crt0.o
+-rw-r--r-- 1 tom tom  3376 May 31 14:52 crt0.s
+-rw-r--r-- 1 tom tom    54 May 31 14:52 main.c
+-rw-rw-r-- 1 tom tom    15 May 31 14:54 main.d
+-rw-rw-r-- 1 tom tom  2112 May 31 14:54 main.o
+-rw-r--r-- 1 tom tom  5540 May 31 14:52 platform.ld
+```
 
 If this works without any errors you are off to a very good start. From here you can proceed to write further code, and create additional source files. Worth noting, dependencies for .c files are automatically generated.
 
@@ -170,17 +163,19 @@ Exception handlers do not return a value, so they are void. They also do not tak
 
 If you were to then run `make` and then `make dump` to view the disassembly, you would notice that the IVT has been populated with an entry that points to the ZeroDivide routine you created, for example:
 
-    tom@ubuntu:~/m68k_bare_metal/myproject$ make dump
-    ...
-    Contents of section .ivt:
-     0008 00000490 00000490 00000490 0000049e  ................
-    ...
-    0000049e <ZeroDivide>:
-     49e:	4e56 0000      	linkw %fp,#0
-     4a2:	4e71           	nop
-     4a4:	4e5e           	unlk %fp
-     4a6:	4e73           	rte
-    	...
+```
+~/m68k_bare_metal/myproject$ make dump
+...
+Contents of section .ivt:
+ 0008 00000490 00000490 00000490 0000049e  ................
+...
+0000049e <ZeroDivide>:
+ 49e:	4e56 0000      	linkw %fp,#0
+ 4a2:	4e71           	nop
+ 4a4:	4e5e           	unlk %fp
+ 4a6:	4e73           	rte
+	...
+```
 
 As you can see, rather than pointing to the default interrupt handler at 0x00000490, one entry corresponding to the divice by zero exception now points to 0x0000049e.
 
@@ -210,21 +205,25 @@ Now, in the linker script you will need to create an entry to be placed in the I
 
 Therefore we add the following to the linker script:
 
-    . = 0x1F8;
-    LONG(ABSOLUTE(my_interrupt_handler));
+```
+. = 0x1F8;
+LONG(ABSOLUTE(my_interrupt_handler));
+```
 
 Re-compiling our code and inspecting the disassembly we should then expect to see something like the following:
 
-    tom@ubuntu:~/m68k_bare_metal/myproject$ make dump
-    ...
-     01f8 00000000 00000000 000004a8           ............
-    ...
-    000004a8 <my_interrupt_handler>:
-     4a8:	4e56 0000      	linkw %fp,#0
-     4ac:	4e71           	nop
-     4ae:	4e5e           	unlk %fp
-     4b0:	4e73           	rte
-    	...
+```
+tom@ubuntu:~/m68k_bare_metal/myproject$ make dump
+...
+ 01f8 00000000 00000000 000004a8           ............
+...
+000004a8 <my_interrupt_handler>:
+ 4a8:	4e56 0000      	linkw %fp,#0
+ 4ac:	4e71           	nop
+ 4ae:	4e5e           	unlk %fp
+ 4b0:	4e73           	rte
+	...
+```
 
 The first byte of the vector entry is indeed at memory address 0x200 in the resulting binary, and points to the address of the `my_interrupt_handler()` routine.
 
@@ -234,3 +233,4 @@ Please file an issue with me for any questions you have, I'll do my best to help
 ## TODOs
  - Integrate a GDB stub for debugging
  - Reserve/define some stack and heap space
+ - Examples
