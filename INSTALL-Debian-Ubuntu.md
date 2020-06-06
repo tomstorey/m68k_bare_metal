@@ -1,4 +1,3 @@
-
 # Installation on Ubuntu and Debian
 Fortunately, Ubuntu and Debian seem to be quite similar, so the same instructions apply for both of these OSes, and are quite straight forward:
 

@@ -6,7 +6,8 @@
 # Original source:
 #     https://gist.github.com/deplinenoise/bcfa4fb9964f90a5f3e9d69f08ca4464
 #
-# I have modified it only to use more recent versions of gcc and binutils.
+# I have modified it only to use more recent versions of gcc and binutils, and
+# to include libmpc in the list of packages for brew to install.
 ###############################################################################
 
 echo Building GCC m68k toolchain...
@@ -26,7 +27,7 @@ BINUTILS_URL=$MIRROR/binutils/$BINUTILS.tar.xz
 GCC=gcc-9.3.0
 GCC_URL=$MIRROR/gcc/$GCC/$GCC.tar.xz
 
-brew install wget mpfr mpc gmp # Can't check this, because brew errors if things are already installed.
+brew install wget mpfr mpc libmpc gmp # Can't check this, because brew errors if things are already installed.
 
 if [ ! -f sources/$BINUTILS.tar.xz ]; then
   echo Fetching $BINUTILS_URL
