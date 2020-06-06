@@ -213,6 +213,7 @@ SECTIONS {
         . = 0x1F8;
         LONG(ABSOLUTE(my_interrupt_handler));
     } > ivt
+	...
 }
 ```
 
