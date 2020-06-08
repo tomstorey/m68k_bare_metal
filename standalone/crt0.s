@@ -16,6 +16,7 @@
     .global _start
     .global __DefaultInterrupt
 
+    .section text
     .align 2
 _start:
     clr.l   %d0                 /* For zero compares */
