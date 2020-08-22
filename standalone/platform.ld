@@ -108,7 +108,7 @@ SECTIONS {
 
     .text : {
         . = ALIGN(0x2);
-        *(.text *.text.*)
+        *(text text.* .text *.text.*)
         . = ALIGN(0x10);
         _text_end = .;
     } > text
