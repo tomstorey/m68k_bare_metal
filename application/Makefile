@@ -51,7 +51,7 @@ crt: crt0.o
 	$(AS) -o crt0.o $(AFLAGS) crt0.s
 
 clean:
-	rm -f bmbinary bmbinary.rom $(OBJ) $(DEP)
+	rm -f bmbinary bmbinary.rom bmbinary.srec $(OBJ) $(DEP)
 
 rom:
 	$(OBJCOPY) -O binary bmbinary bmbinary.rom
