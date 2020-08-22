@@ -55,6 +55,7 @@ clean:
 
 rom:
 	$(OBJCOPY) -O binary bmbinary bmbinary.rom
+	$(OBJCOPY) -O srec bmbinary bmbinary.srec
 
 dump:
 	$(OBJDUMP) -belf32-m68k -st -j.reset -j.ivt bmbinary
