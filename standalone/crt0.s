@@ -75,11 +75,10 @@ _start:
     bra     .next_val
 
 .memtest_loop:
-    move.l  %a1, (%a1)+         /* Increment addr pointer */
-    move.l  %a2, %a2            /* If A2 is zero, memory testing complete */
+    addq.l  #4, %a1             /* Increment addr pointer */
+    subq.l  #4, %a2             /* Decrement amount of memory left to test */
+    move.l  %a2, %d3            /* If A2 is zero, memory testing complete */
     beq     .data_copy
-
-    sub.l   #4, %a2
     bra     .next_memtest
 
 .memtest_fail:
