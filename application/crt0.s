@@ -20,17 +20,16 @@ _start:
     movea.l #_data_start, %a1   /* A1 is destination pointer */
     movea.l #_data_end, %a2     /* A2 is end of .data */
 
-    cmpa.l  %a1, %a2            /* If no data to copy, skip */
-    beq     .zeroise_bss
-
 .data_copy_loop:
     /*
      * Copy long words, post incrementing pointers, until the destination
      * pointer equals the end of the .data section.
      */
+    cmpa.l  %a1, %a2            /* If no data to copy, skip */
+    beq     .zeroise_bss
+
     move.l  (%a0)+, (%a1)+
-    cmpa.l  %a1, %a2
-    bne     .data_copy_loop
+    bra     .data_copy_loop
 
 .zeroise_bss:
     movea.l #_bss_start, %a0    /* A0 is destination pointer */
