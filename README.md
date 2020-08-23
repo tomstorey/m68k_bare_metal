@@ -77,7 +77,7 @@ Once you have done this, the first thing to do is to assemble `crt0.s`.
 You'll then notice a file called `crt.o` in your project directory. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build) testing and zeroising RAM, copying the values of initialised variables into their appropriate memory locations, calling soft and hard initialisation hooks, and then jumps to your `main()` routine. In an application build, `crt0` only copies initialised variables into RAM, zeroises the .bss section (uninitialised variables) and jumps to `main()`.
 
 ### Linker script
-The default linker script configuration places ROM at address 0 with a size of 0x100000 (1 megabyte), and RAM at 0x100000 with a size of 0x100000. You may need to modify these values to suit your systems memory layout.
+The default linker script configuration places ROM at address 0 with a size of 0x100000 (1 megabyte), and RAM at 0x100000 with a size of 0x100000. You may need to modify these values to suit your systems memory layout. If you do, be sure to `make clean` and rebuild your project to ensure that the new memory layout is updated in your binary.
 
 To do this, open `platform.ld` in your preferred editor, and look at the `base` and `sz` variables at the top of the file. Modify these as required.
 
