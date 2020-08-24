@@ -77,9 +77,9 @@ _start:
 .memtest_loop:
     addq.l  #4, %a1             /* Increment addr pointer */
     subq.l  #4, %a2             /* Decrement amount of memory left to test */
-    move.l  %a2, %d3            /* If A2 is zero, memory testing complete */
-    beq     .data_copy
-    bra     .next_memtest
+    move.l  %a2, %d3            /* SUBQ on address reg doesnt affect flags */
+    bne     .next_memtest       /* If A2 is not zero, continue testing */
+    bra     .data_copy          /* Otherwise memory testing is complete */
 
 .memtest_fail:
     bra     .memtest_fail       /* Halt on failure */
