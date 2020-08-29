@@ -19,6 +19,8 @@
     .section text
     .align 2
 _start:
+    ori.w   #0x0700             /* Ensure interrupts are "disabled" */
+
     clr.l   %d0                 /* For zero compares */
     move.l  #0x55555555, %d2    /* Mem test subtract value */
 
