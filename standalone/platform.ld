@@ -4,11 +4,24 @@
  *
  *   base indicates at what address a memory begins
  *   sz indicates the size of that memory
+ *
+ * Values can be specified in decimal, hexadecimal, or as units such
+ * as 1K or 1M.
+ *
+ * Space for the stack may also be reserved here. The heap will then
+ * consume all remaining RAM between the end of the .bss section and
+ * the lowest address reserved for the stack.
+ *
+ * Since there are no controls in place to ensure the stack does not
+ * grow into the heap, the user is responsible for reserving sufficient
+ * stack space to prevent it overwriting the upper areas of the heap.
  */
 __rom_base = 0;
-__rom_sz = 0x100000;
+__rom_sz = 1M;
 __ram_base = 0x100000;
-__ram_sz = 0x100000;
+__ram_sz = 1M;
+
+__stack_sz = 4K;
 
 /*
  * Dont modify below this line (unless you know what youre doing),
@@ -18,8 +31,8 @@ __ram_sz = 0x100000;
 STARTUP(crt0.o)
 OUTPUT_ARCH(m68k)
 
-PROVIDE(__rom_end = (__rom_base + __rom_sz));
-PROVIDE(__ram_end = (__ram_base + __ram_sz));
+__rom_end = (__rom_base + __rom_sz);
+__ram_end = (__ram_base + __ram_sz);
 
 __reset_org = __rom_base;
 __ivt_org = __rom_base + 0x8;
@@ -52,10 +65,10 @@ SECTIONS {
         LONG(DEFINED(Trace) ? ABSOLUTE(Trace) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1010Emulator) ? ABSOLUTE(Line1010Emulator) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1111Emulator) ? ABSOLUTE(Line1111Emulator) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x38-0x8;
+        . = 0x38-0x8; /* Reserved vector entries */
         LONG(DEFINED(FormatError) ? ABSOLUTE(FormatError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(UninitializedInterruptVector) ? ABSOLUTE(UninitializedInterruptVector) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x60-0x8;
+        . = 0x60-0x8; /* Reserved vector entries */
         LONG(DEFINED(SpuriousInterrupt) ? ABSOLUTE(SpuriousInterrupt) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(IRQ1) ? ABSOLUTE(IRQ1) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(IRQ2) ? ABSOLUTE(IRQ2) : ABSOLUTE(__DefaultInterrupt));
@@ -80,7 +93,7 @@ SECTIONS {
         LONG(DEFINED(TRAP13) ? ABSOLUTE(TRAP13) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP14) ? ABSOLUTE(TRAP14) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP15) ? ABSOLUTE(TRAP15) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x100-0x8;
+        . = 0x100-0x8; /* Reserved vector entries */
 /*
  *
  * User Interrupt Vectors
@@ -107,23 +120,23 @@ SECTIONS {
     } > ivt
 
     .text : {
-        . = ALIGN(0x2);
+        _text_start = .;
         *(text text.* .text *.text.*)
         . = ALIGN(0x10);
         _text_end = .;
     } > text
 
     .rodata : AT(_text_end) {
+        _rodata_start = .;
         *(.rodata)
         . = ALIGN(0x10);
         _rodata_end = .;
     } > text
 
     .data : AT(_rodata_end) {
-        . = ALIGN(0x4);
         _data_start = .;
         *(.data)
-        . = ALIGN(0x4);
+        . = ALIGN(0x10);
         _data_end = .;
     } > data
 
@@ -131,7 +144,13 @@ SECTIONS {
         _bss_start = .;
         *(.bss)
         *(COMMON)
-        . = ALIGN(0x4);
+        . = ALIGN(0x10);
         _bss_end = .;
+    } > data
+
+    .heap : {
+        _heap_start = .;
+        . += (__ram_sz - __stack_sz - SIZEOF(.bss) - SIZEOF(.data));
+        _heap_end = .;
     } > data
 }
