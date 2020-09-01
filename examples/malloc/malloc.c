@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include "include/stdint.h"
+#include "stdint.h"
 #include "malloc.h"
 
 extern uint32_t _heap_start;            /* Start address of heap */
