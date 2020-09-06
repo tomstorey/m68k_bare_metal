@@ -16,7 +16,7 @@ _start:
     /*
      * Copy initialised data from ROM to RAM.
      */
-    movea.l #_text_end, %a0     /* A0 is source pointer */
+    movea.l #_rodata_end, %a0   /* A0 is source pointer */
     movea.l #_data_start, %a1   /* A1 is destination pointer */
     movea.l #_data_end, %a2     /* A2 is end of .data */
 
