@@ -129,14 +129,14 @@ _start:
      */
     jmp     main
 
-    reset                       /* Reset on return from main() */
+    /* There is no return from main, so ... undefined behaviour from here. */
 
 /*
  * __DefaultInterrupt handles all interrupt and exception vectors that have not
  * been overridden by the programmer.
  *
- * Unless handled more specifically, all exceptions and interrupts cause the
- * processor to reset.
+ * Unless handled more specifically, all exceptions and interrupts simply
+ * return.
  */
 __DefaultInterrupt:
-    reset
+    rte

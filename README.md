@@ -142,11 +142,11 @@ The Makefile includes some extra rules to help with your development, these are:
 ## Default interrupt handler
 By default, all documented exception vectors (for the 68000) will point to a default interrupt handling routine, which is included in `crt0.s`, called `__DefaultInterrupt`.
 
-The default handler simply resets the processor, but this is not likely to be the desired behaviour that a user may want. Therefore, the user needs to create their own service routines to handle them.
+The default handler simply performs a return (RTE), but this is not likely to be the desired behaviour that a user may want. Therefore, the user needs to create their own service routines to handle them.
 
 The linker script builds the IVT based on the presence or absence of each expected service routine. If a service routine is not defined, then its vector table entry points to `__DefaultInterrupt`, otherwise the entry points to the memory address of the routine.
 
-You can of course modify `__DefaultInterrupt` if you desire some other default behaviour than a reset.
+You can of course modify `__DefaultInterrupt` if you desire some other default behaviour.
 
 ## Exception handling routines
 If you look in `platform.ld` you will see a list of all of the exception handling routine names that are expected. These can be changed if you would prefer different names.
