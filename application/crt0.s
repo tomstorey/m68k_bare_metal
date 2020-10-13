@@ -10,7 +10,7 @@
 
     .global _start
 
-    .section text
+    .section .text
     .align 2
 _start:
     /*

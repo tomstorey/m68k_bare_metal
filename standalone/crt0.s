@@ -16,7 +16,7 @@
     .global _start
     .global __DefaultInterrupt
 
-    .section text
+    .section .text
     .align 2
 _start:
     ori.w   #0x0700, %sr        /* Ensure interrupts are "disabled" */
