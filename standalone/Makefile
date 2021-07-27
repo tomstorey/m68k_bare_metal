@@ -14,7 +14,10 @@
 # The compiler will automatically choose the correct source file (.c, .s etc)
 # according to the object file (.o) to be created.
 
+CPU=68000
+
 PREFIX=m68k-linux-gnu
+# PREFIX=m68k-unknown-elf
 
 OBJ=main.o
 
@@ -26,21 +29,21 @@ LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
-CFLAGS=-m68000 -Wall -g -static -I. -msoft-float -MMD -MP
+CFLAGS=-m$(CPU) -Wall -g -static -I. -msoft-float -MMD -MP
 LFLAGS=--script=platform.ld
-AFLAGS=-m68000 -Wall -c -g
+AFLAGS=-m$(CPU) -Wall -c -g
 
 SRC=$(wildcard *.c)
 DEP=$(SRC:%.c=%.d)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -m$(CPU) -c -o $@ $<
 
 %.o: %.S
-	$(CC) -m68000 -c $<
+	$(CC) $(CFLAGS) -m$(CPU) -c $<
 
 %.o: %.s
-	$(CC) -m68000 -c $<
+	$(CC) $(CFLAGS) -m$(CPU) -c $<
 
 bmbinary: $(OBJ)
 	$(LD) -o $@ $(OBJ) $(LFLAGS)
@@ -48,7 +51,6 @@ bmbinary: $(OBJ)
 -include $(DEP)
 
 crt: crt0.o
-	$(AS) -o crt0.o $(AFLAGS) crt0.s
 
 clean:
 	rm -f bmbinary bmbinary.rom bmbinary.srec $(OBJ) $(DEP)

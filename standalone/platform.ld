@@ -121,28 +121,28 @@ SECTIONS {
 
     .text : {
         _text_start = .;
-        *(.text .text.*)
+        *(text text.* .text *.text.*)
         . = ALIGN(0x10);
         _text_end = .;
     } > text
 
     .rodata : AT(_text_end) {
         _rodata_start = .;
-        *(.rodata .rodata.*)
+        *(.rodata)
         . = ALIGN(0x10);
         _rodata_end = .;
     } > text
 
     .data : AT(_rodata_end) {
         _data_start = .;
-        *(.data .data.*)
+        *(.data)
         . = ALIGN(0x10);
         _data_end = .;
     } > data
 
     .bss : {
         _bss_start = .;
-        *(.bss .bss.*)
+        *(.bss)
         *(COMMON)
         . = ALIGN(0x10);
         _bss_end = .;
