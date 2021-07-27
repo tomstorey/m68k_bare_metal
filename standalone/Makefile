@@ -17,7 +17,7 @@
 CPU=68000
 
 PREFIX=m68k-linux-gnu
-# PREFIX=m68k-unknown-elf
+# PREFIX=m68k-eabi-elf
 
 OBJ=main.o
 

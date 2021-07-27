@@ -16,15 +16,15 @@ mkdir -p sources
 mkdir -p build
 
 CORES=8
-TARGET=m68k-unknown-elf
-PREFIX=$PWD/m68k-unknown-elf
+TARGET=m68k-eabi-elf
+PREFIX=$PWD/$TARGET
 
 MIRROR=http://ftpmirror.gnu.org
 
-BINUTILS=binutils-2.34
+BINUTILS=binutils-2.36
 BINUTILS_URL=$MIRROR/binutils/$BINUTILS.tar.xz
 
-GCC=gcc-9.3.0
+GCC=gcc-10.2.0
 GCC_URL=$MIRROR/gcc/$GCC/$GCC.tar.xz
 
 brew install wget mpfr mpc libmpc gmp # Can't check this, because brew errors if things are already installed.
