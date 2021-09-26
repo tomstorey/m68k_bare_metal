@@ -139,8 +139,6 @@ SECTIONS {
  *   . = 0x140;
  *   LONG(ABSOLUTE(NameOfHandlerFunction));
  */
-        . = 0x200;
-        LONG(ABSOLUTE(my_interrupt_handler));
     } > evt
 
     .text : {
