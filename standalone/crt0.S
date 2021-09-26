@@ -38,14 +38,14 @@ _start:
         movec   %a0, %vbr
 #else /* USEVBR */
 #ifndef NO_ROMRAM_REMAP
+        /* For CPUs without a VBR, if ROM/RAM remapping is being used, copy the
+         * exception vector table to RAM */
         move.l  #_rom_base, %d0         /* Skip EVT copy if ROM is at addr 0 */
         beq     1f
 
         move.w  #511, %d0               /* Number of words to copy, less 1 for
                                          * dbf loop */
         movea.l #_rom_base, %a0         /* Source address */
-        /* For CPUs without a VBR, if ROM/RAM remapping is being used, copy the
-         * exception vector table to RAM */
         movea.l #0, %a1                 /* Destination address */
 
 0:      move.w  %a0@+, %a1@+
