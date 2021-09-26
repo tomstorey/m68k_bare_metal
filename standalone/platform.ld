@@ -16,12 +16,12 @@
  * grow into the heap, the user is responsible for reserving sufficient
  * stack space to prevent it overwriting the upper areas of the heap.
  */
-__rom_base = 0;
-__rom_sz = 1M;
-__ram_base = 0x100000;
-__ram_sz = 1M;
+_rom_base = 0;
+_rom_sz = 1M;
+_ram_base = 0x100000;
+_ram_sz = 1M;
 
-__stack_sz = 4K;
+_stack_sz = 4K;
 
 /*
  * Dont modify below this line (unless you know what youre doing),
@@ -31,30 +31,33 @@ __stack_sz = 4K;
 STARTUP(crt0.o)
 OUTPUT_ARCH(m68k)
 
-__rom_end = (__rom_base + __rom_sz);
-__ram_end = (__ram_base + __ram_sz);
+__rom_end = (_rom_base + _rom_sz);
+__ram_end = (_ram_base + _ram_sz);
 
-__reset_org = __rom_base;
-__ivt_org = __rom_base + 0x8;
-__text_org = __rom_base + 0x400;
-__text_sz = __rom_sz - 0x400;
-__data_org = __ram_base;
-__data_sz = __ram_sz;
+__evt_org = _rom_base;
+__text_org = _rom_base + 0x400;
+__text_sz = _rom_sz - 0x400;
+__data_org = _ram_base;
+__data_sz = _ram_sz;
+
+/* Make sure stack size is a multiple of 16, and at least the amount the user
+ * thought they were getting. */
+_stack_sz += 15;
+_stack_sz &= ~0xF;
 
 MEMORY {
-    reset        (r!ax) : ORIGIN = __reset_org, LENGTH = 0x8
-    ivt          (r!ax) : ORIGIN = __ivt_org, LENGTH = 0x3F8
+    evt          (r!ax) : ORIGIN = __evt_org, LENGTH = 0x400
     text         (rx!w) : ORIGIN = __text_org, LENGTH = __text_sz
     data        (rwx!a) : ORIGIN = __data_org, LENGTH = __data_sz
 }
 
 SECTIONS {
-    .reset : {
+    .evt : {
+        /* Reset vector */
         LONG(__ram_end);                /* Initial SSP */
         LONG(ABSOLUTE(_start));         /* Initial PC */
-    } > reset
 
-    .ivt : {
+        /* Exception vector table */
         LONG(DEFINED(BusError) ? ABSOLUTE(BusError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(AddressError) ? ABSOLUTE(AddressError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(IllegalInstruction) ? ABSOLUTE(IllegalInstruction) : ABSOLUTE(__DefaultInterrupt));
@@ -65,10 +68,18 @@ SECTIONS {
         LONG(DEFINED(Trace) ? ABSOLUTE(Trace) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1010Emulator) ? ABSOLUTE(Line1010Emulator) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1111Emulator) ? ABSOLUTE(Line1111Emulator) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x38-0x8; /* Reserved vector entries */
+        LONG(DEFINED(HardwareBreakpoint) ? ABSOLUTE(HardwareBreakpoint) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(CoprocessorProtocolViolation) ? ABSOLUTE(CoprocessorProtocolViolation) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(FormatError) ? ABSOLUTE(FormatError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(UninitializedInterruptVector) ? ABSOLUTE(UninitializedInterruptVector) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x60-0x8; /* Reserved vector entries */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
         LONG(DEFINED(SpuriousInterrupt) ? ABSOLUTE(SpuriousInterrupt) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(IRQ1) ? ABSOLUTE(IRQ1) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(IRQ2) ? ABSOLUTE(IRQ2) : ABSOLUTE(__DefaultInterrupt));
@@ -93,7 +104,22 @@ SECTIONS {
         LONG(DEFINED(TRAP13) ? ABSOLUTE(TRAP13) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP14) ? ABSOLUTE(TRAP14) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP15) ? ABSOLUTE(TRAP15) : ABSOLUTE(__DefaultInterrupt));
-        . = 0x100-0x8; /* Reserved vector entries */
+        LONG(DEFINED(FPBranchOrSetUnorderedCondition) ? ABSOLUTE(FPBranchOrSetUnorderedCondition) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPInexactResult) ? ABSOLUTE(FPInexactResult) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPZeroDivide) ? ABSOLUTE(FPZeroDivide) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPUnderflow) ? ABSOLUTE(FPUnderflow) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPOperandError) ? ABSOLUTE(FPOperandError) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPOverflow) ? ABSOLUTE(FPOverflow) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPSignallingNAN) ? ABSOLUTE(FPSignallingNAN) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPUnimplementedDataType) ? ABSOLUTE(FPUnimplementedDataType) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUConfigurationError) ? ABSOLUTE(MMUConfigurationError) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUIllegalOperation) ? ABSOLUTE(MMUIllegalOperation) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUAccessLevelViolation) ? ABSOLUTE(MMUAccessLevelViolation) : ABSOLUTE(__DefaultInterrupt));
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
+        LONG(0); /* Unassigned, reserved */
 /*
  *
  * User Interrupt Vectors
@@ -102,47 +128,45 @@ SECTIONS {
  *   Hex    Dec       Hex      Dec
  *   40-FF  64-255    100-3FC  256-1020
  *
- * To calculate the offset within the .ivt section to place your vector, use
- * the following calculation, assuming vector number = 0x50:
+ * To calculate the offset within the .evt section to place your vector, use
+ * the following calculation (assuming vector number = 0x50):
  *
- *   0x50 * 4 = 0x140 (address in ROM)
- *   0x140 - 8 = 0x138 (offset in .ivt section)
- *
- * Subtracting 8 is necessary since the .ivt section begins at address 0x8,
- * and origins are calculated from the beginning of each section.
+ *   0x50 * 4 = 0x140
  *
  * You could then place your vector at that position in the vector table as
  * follows:
  *
- *   . = 0x138;
+ *   . = 0x140;
  *   LONG(ABSOLUTE(NameOfHandlerFunction));
  */
-    } > ivt
+        . = 0x200;
+        LONG(ABSOLUTE(my_interrupt_handler));
+    } > evt
 
     .text : {
         _text_start = .;
-        *(text text.* .text *.text.*)
+        *(.text .text.*)
         . = ALIGN(0x10);
         _text_end = .;
     } > text
 
     .rodata : AT(_text_end) {
         _rodata_start = .;
-        *(.rodata)
+        *(.rodata .rodata.*)
         . = ALIGN(0x10);
         _rodata_end = .;
     } > text
 
     .data : AT(_rodata_end) {
         _data_start = .;
-        *(.data)
+        *(.data .data.*)
         . = ALIGN(0x10);
         _data_end = .;
     } > data
 
     .bss : {
         _bss_start = .;
-        *(.bss)
+        *(.bss .bss.*)
         *(COMMON)
         . = ALIGN(0x10);
         _bss_end = .;
@@ -150,7 +174,13 @@ SECTIONS {
 
     .heap : {
         _heap_start = .;
-        . += (__ram_sz - __stack_sz - SIZEOF(.bss) - SIZEOF(.data));
+        . += (_ram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data));
         _heap_end = .;
+    } > data
+
+    .stack : {
+        _stack_start = .;
+        . += _stack_sz;
+        _stack_end = .;
     } > data
 }

@@ -8,10 +8,10 @@
  * Values can be specified in decimal, hexadecimal, or as units such
  * as 1K or 1M.
  */
-__rom_base = 0;
-__rom_sz = 1M;
-__ram_base = 0x100000;
-__ram_sz = 1M;
+_rom_base = 0;
+_rom_sz = 1M;
+_ram_base = 0x100000;
+_ram_sz = 1M;
 
 /*
  * Dont modify below this line (unless you know what youre doing),
@@ -21,13 +21,13 @@ __ram_sz = 1M;
 STARTUP(crt0.o)
 OUTPUT_ARCH(m68k)
 
-__rom_end = (__rom_base + __rom_sz);
-__ram_end = (__ram_base + __ram_sz);
+__rom_end = (_rom_base + _rom_sz);
+__ram_end = (_ram_base + _ram_sz);
 
-__text_start = __rom_base;
-__text_sz = __rom_sz;
-__data_start = __ram_base;
-__data_sz = __ram_sz;
+__text_start = _rom_base;
+__text_sz = _rom_sz;
+__data_start = _ram_base;
+__data_sz = _ram_sz;
 
 MEMORY {
     text         (rx!w) : ORIGIN = __text_start, LENGTH = __text_sz

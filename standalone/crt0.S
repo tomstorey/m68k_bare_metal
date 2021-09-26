@@ -1,142 +1,114 @@
-    .title "crt0.s for m68k bare metal"
+        .title "crt0.S for m68k bare metal - standalone"
 
-    .extern main
-    .weak hardware_init_hook
-    .weak software_init_hook
+/* Uncomment the following if you dont want the EVT to be automatically copied
+ * to RAM address 0 when the ROM has been remapped away from address 0 */
+/* #define NO_ROMRAM_REMAP */
 
-    .extern __ram_base
-    .extern __ram_sz
+#define USEVBR (defined(mc68010) || defined(mc68020) || defined(mc68030) || \
+                defined(mc68040) || defined(mc68060) || defined(mc68332))
 
-    .extern _text_end
-    .extern _data_start
-    .extern _data_end
-    .extern _bss_start
-    .extern _bss_end
+        /* A bunch of variables supplied by the linker */
+        .extern _stack_end
+        .extern _rom_base
+        .extern _bss_start
+        .extern _bss_end
+        .extern _text_end
+        .extern _data_start
+        .extern _data_end
+        .weak hardware_init_hook
+        .weak software_init_hook
+        .extern main
 
-    .global _start
-    .global __DefaultInterrupt
+        .section .text
+        .align 2
 
-    .section .text
-    .align 2
+        .type _start, @function
+        .globl _start
 _start:
-    ori.w   #0x0700, %sr        /* Ensure interrupts are "disabled" */
+        move.w  #0x2700, %sr            /* Mask interrupts, supervisor mode */
 
-    clr.l   %d0                 /* For zero compares */
-    move.l  #0x55555555, %d2    /* Mem test subtract value */
+        movea.l #_rom_base, %sp        /* Manually configure the SP value,
+                                         * this allows the SP value in the ROM
+                                         * image to be used e.g. to store a
+                                         * checksum instead. */
 
-    /*
-     * Memory test
-     */
-    movea.l #__ram_base, %a1    /* A1 is RAM base address */
-    movea.l #__ram_sz, %a2      /* A2 is RAM size */
+#if USEVBR
+        /* If using a CPU with a VBR, point it to the beginning of ROM */
+        movea.l #_rom_base, %a0
+        movec   %a0, %vbr
+#else /* USEVBR */
+#ifndef NO_ROMRAM_REMAP
+        move.l  #_rom_base, %d0         /* Skip EVT copy if ROM is at addr 0 */
+        beq     1f
 
-.next_memtest:
-    /*
-     * Walking ones
-     *
-     * Start with 0x00000001 in D1, and left shift until zero.
-     */
-    move.l  %a1, %a0            /* Addr to test into A0 */
-    move.l  #1, %d1             /* Test pattern into D1 */
+        move.w  #511, %d0               /* Number of words to copy, less 1 for
+                                         * dbf loop */
+        movea.l #_rom_base, %a0         /* Source address */
+        /* For CPUs without a VBR, if ROM/RAM remapping is being used, copy the
+         * exception vector table to RAM */
+        movea.l #0, %a1                 /* Destination address */
 
-.next_walk_one:
-    move.l  %d1, (%a0)
-    cmp.l   (%a0), %d1
-    bne     .memtest_fail
-    lsl.l   #1, %d1
-    bne     .next_walk_one
+0:      move.w  %a0@+, %a1@+
+        dbf     %d0, 0b
+#endif /* NO_ROMRAM_REMAP */
+#endif /* USEVBR */
 
-    /*
-     * Value test
-     *
-     * Initially load all ones, then subtract 0x55555555 on each pass until the
-     * pattern reaches zero.
-     *
-     * This cycles through the following patterns:
-     *
-     * 0xffffffff
-     * 0xaaaaaaaa
-     * 0x55555555
-     * 0x00000000
-     *
-     * As the last pattern to be written is zero, this effectively initialises
-     * all RAM locations to zero, and as such the .bss section does not need to
-     * be cleared as a separate step.
-     */
-    move.l  #0xffffffff, %d1
+        /* Initialise (clear) the BSS area */
+        movea.l #_bss_start, %a0        /* Starting address */
+        movea.l #_bss_end, %a1          /* End address */
 
-.next_val:
-    move.l  %d1, (%a0)
-    cmp.l   (%a0), %d1
-    bne     .memtest_fail
+1:      cmpa.l  %a1, %a0                /* Check if start < end */
+        bge     2f
 
-    cmp.l   %d0, %d1            /* If last pattern was zero, next mem addr */
-    beq     .memtest_loop
+        clr.w   %a0@+                   /* Clear word and increment start */
 
-    sub.l   %d2, %d1
-    bra     .next_val
+        bra     1b
 
-.memtest_loop:
-    addq.l  #4, %a1             /* Increment addr pointer */
-    subq.l  #4, %a2             /* Decrement amount of memory left to test */
-    move.l  %a2, %d3            /* SUBQ on address reg doesnt affect flags */
-    bne     .next_memtest       /* If A2 is not zero, continue testing */
-    bra     .data_copy          /* Otherwise memory testing is complete */
+        /* Copy initialised data from ROM to RAM */
+2:      movea.l #_text_end, %a0         /* Source address */
+        movea.l #_data_start, %a1       /* Destination start address */
+        movea.l #_data_end, %a2         /* Destination end address */
 
-.memtest_fail:
-    bra     .memtest_fail       /* Halt on failure */
+3:      cmpa.l  %a2, %a1                /* Check if start < end */
+        bge     4f
 
-.data_copy:
-    /*
-     * Copy initialised data from ROM to RAM.
-     */
-    movea.l #_rodata_end, %a0   /* A0 is source pointer */
-    movea.l #_data_start, %a1   /* A1 is destination pointer */
-    movea.l #_data_end, %a2     /* A2 is end of .data */
+        move.w  %a0@+, %a1@+            /* Copy a word from ROM to RAM */
 
-.data_copy_loop:
-    /*
-     * Copy long words, post incrementing pointers, until the destination
-     * pointer equals the end of the .data section.
-     */
-    cmpa.l  %a1, %a2            /* If no data to copy, skip */
-    beq     .hard_init
+        bra     3b
 
-    move.l  (%a0)+, (%a1)+
-    bra     .data_copy_loop
+        /* Execute hardware init hook if present */
+4:      clr.l   %d0
+        lea     hardware_init_hook, %a0
+        cmpa.l  %d0, %a0
+        beq     5f
+        jsr     (%a0)
 
-.hard_init:
-    /*
-     * Execute hardware initialisation hook if present.
-     */
-    lea     hardware_init_hook, %a0
-    cmpa.l  %d0, %a0
-    beq     .soft_init
-    jsr     (%a0)
+        /* Execute software init hook if present */
+5:      clr.l   %d0
+        lea     software_init_hook, %a0
+        cmpa.l  %d0, %a0
+        beq     6f
+        jsr     (%a0)
 
-.soft_init:
-    /*
-     * Execute software initialisation hook if present.
-     */
-    lea     software_init_hook, %a0
-    cmpa.l  %d0, %a0
-    beq     .call_main
-    jsr     (%a0)
+        /* Jump to main() */
+6:      jmp     main
 
-.call_main:
-    /*
-     * Jump to main routine.
-     */
-    jmp     main
-
-    /* There is no return from main, so ... undefined behaviour from here. */
+        /* In a bare metal environment, main() should not return as there is
+         * nowhere to resume execution from. Behaviour is undefined if this
+         * happens! */
 
 /*
  * __DefaultInterrupt handles all interrupt and exception vectors that have not
  * been overridden by the programmer.
  *
- * Unless handled more specifically, all exceptions and interrupts simply
- * return.
+ * Unless handled more specifically, all exceptions and interrupts are masked
+ * and the CPU stops executing.
  */
+        .type __DefaultInterrupt, @function
+        .weak __DefaultInterrupt
+        .globl __DefaultInterrupt
 __DefaultInterrupt:
-    rte
+        stop    #0x2700
+        bra     .
+
+        .end

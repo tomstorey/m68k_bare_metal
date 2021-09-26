@@ -13,37 +13,43 @@
 #
 # The compiler will automatically choose the correct source file (.c, .s etc)
 # according to the object file (.o) to be created.
-
-CPU=68000
-
-PREFIX=m68k-linux-gnu
-# PREFIX=m68k-eabi-elf
-
 OBJ=main.o
 
-# Dont modify below this line (unless you know what youre doing).
+# Specify the CPU type that you are targeting your build towards.
+#
+# Supported architectures can usually be found with the --target-help argument
+# passed to gcc, but a quick summary is:
+#
+# 68000, 68010, 68020, 68030, 68040, 68060, cpu32 (includes 68332), 68302
+CPU=68010
 
+# Uncomment either of the following depending on how you have installed gcc on
+# your system. m68k-linux-gnu for Linux installations, m68k-eabi-elf if gcc was
+# built from scratch e.g. on a Mac by running the build script.
+# PREFIX=m68k-linux-gnu
+PREFIX=m68k-eabi-elf
+
+# Dont modify below this line (unless you know what youre doing).
 CC=$(PREFIX)-gcc
 AS=$(PREFIX)-as
 LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
-CFLAGS=-m$(CPU) -Wall -g -static -I. -msoft-float -MMD -MP
-LFLAGS=--script=application.ld
-AFLAGS=-m$(CPU) -Wall -c -g
+CFLAGS=-m$(CPU) -Wall -g -static -I../include -I. -msoft-float -MMD -MP -O
+LFLAGS=--script=application.ld -L../libmetal -lmetal
 
 SRC=$(wildcard *.c)
 DEP=$(SRC:%.c=%.d)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -m$(CPU) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.S
-	$(CC) $(CFLAGS) -m$(CPU) -c $<
+	$(CC) $(CFLAGS) -c $<
 
 %.o: %.s
-	$(CC) $(CFLAGS) -m$(CPU) -c $<
+	$(CC) $(CFLAGS) -c $<
 
 bmbinary: $(OBJ)
 	$(LD) -o $@ $(OBJ) $(LFLAGS)
@@ -60,12 +66,12 @@ rom:
 	$(OBJCOPY) -O srec bmbinary bmbinary.srec
 
 dump:
-	$(OBJDUMP) -belf32-m68k -dt -j.text bmbinary
-	$(OBJDUMP) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -m$(CPU) -belf32-m68k -dt -j.text bmbinary
+	$(OBJDUMP) -m$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 dumps:
-	$(OBJDUMP) -belf32-m68k -St -j.text bmbinary
-	$(OBJDUMP) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -m$(CPU) -belf32-m68k -St -j.text bmbinary
+	$(OBJDUMP) -m$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 hexdump:
 	hexdump -C bmbinary.rom
