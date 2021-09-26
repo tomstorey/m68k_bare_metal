@@ -20,7 +20,8 @@ OBJ=main.o
 # Supported architectures can usually be found with the --target-help argument
 # passed to gcc, but a quick summary is:
 #
-# 68000, 68010, 68020, 68030, 68040, 68060, cpu32 (includes 68332), 68302
+# 68000, 68010, 68020, 68030, 68040, 68060, cpu32 (includes 68332 and 68360),
+# 68302
 CPU=68010
 
 # Uncomment either of the following depending on how you have installed gcc on
