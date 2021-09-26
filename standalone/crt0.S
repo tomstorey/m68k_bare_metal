@@ -2,7 +2,7 @@
 
 /* Uncomment the following if you dont want the EVT to be automatically copied
  * to RAM address 0 when the ROM has been remapped away from address 0 */
-/* #define NO_ROMRAM_REMAP */
+/* #define NO_EVT_COPY */
 
 #define USEVBR (defined(mc68010) || defined(mc68020) || defined(mc68030) || \
                 defined(mc68040) || defined(mc68060) || defined(mc68332))
@@ -37,9 +37,10 @@ _start:
         movea.l #_rom_base, %a0
         movec   %a0, %vbr
 #else /* USEVBR */
-#ifndef NO_ROMRAM_REMAP
+#ifndef NO_EVT_COPY
         /* For CPUs without a VBR, if ROM/RAM remapping is being used, copy the
-         * exception vector table to RAM */
+         * exception vector table to RAM. This is determined by the base addr
+         * of the ROM being non-zero. */
         move.l  #_rom_base, %d0         /* Skip EVT copy if ROM is at addr 0 */
         beq     1f
 
@@ -50,7 +51,7 @@ _start:
 
 0:      move.w  %a0@+, %a1@+
         dbf     %d0, 0b
-#endif /* NO_ROMRAM_REMAP */
+#endif /* NO_EVT_COPY */
 #endif /* USEVBR */
 
         /* Initialise (clear) the BSS area */
