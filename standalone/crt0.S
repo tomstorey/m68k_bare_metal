@@ -77,17 +77,15 @@ _start:
         bra     3b
 
         /* Execute hardware init hook if present */
-4:      clr.l   %d0
-        lea     hardware_init_hook, %a0
-        cmpa.l  %d0, %a0
+4:      move.l  hardware_init_hook, %d0
         beq     5f
+        movea.l %d0, %a0
         jsr     (%a0)
 
         /* Execute software init hook if present */
-5:      clr.l   %d0
-        lea     software_init_hook, %a0
-        cmpa.l  %d0, %a0
+5:      move.l  software_init_hook, %d0
         beq     6f
+        movea.l %d0, %a0
         jsr     (%a0)
 
         /* Jump to main() */
