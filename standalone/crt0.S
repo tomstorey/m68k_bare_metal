@@ -27,7 +27,7 @@
 _start:
         move.w  #0x2700, %sr            /* Mask interrupts, supervisor mode */
 
-        movea.l #_rom_base, %sp        /* Manually configure the SP value,
+        movea.l #_stack_end, %sp        /* Manually configure the SP value,
                                          * this allows the SP value in the ROM
                                          * image to be used e.g. to store a
                                          * checksum instead. */
