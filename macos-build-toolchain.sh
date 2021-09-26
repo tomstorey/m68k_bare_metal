@@ -57,5 +57,5 @@ if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-gcc ]; then
   echo Building GCC
   rm -rf toolchain/build/gcc
   mkdir -p toolchain/build/gcc
-  (cd toolchain/build/gcc && ../../sources/$GCC/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER --enable-languages=c,c++,go --with-gmp=/usr/local --with-mpfr=/usr/local --with-mpc=/usr/local && make -j $CORES all-gcc && make install-gcc) || exit 1
+  (cd toolchain/build/gcc && ../../sources/$GCC/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER --enable-languages=c --with-gmp=/usr/local --with-mpfr=/usr/local --with-mpc=/usr/local && make -j $CORES all-gcc && make install-gcc) || exit 1
 fi
