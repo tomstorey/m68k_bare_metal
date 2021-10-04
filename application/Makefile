@@ -56,12 +56,12 @@ bmbinary: $(OBJ)
 
 -include $(DEP)
 
-all: clean bmbinary rom
+all: bmbinary rom clean
 
 crt: crt0.o
 
 clean:
-	rm -f bmbinary bmbinary.rom bmbinary.srec $(OBJ) $(DEP)
+	rm -f $(OBJ) $(DEP)
 
 rom:
 	$(OBJCOPY) -O binary bmbinary bmbinary.rom
