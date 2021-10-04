@@ -32,14 +32,12 @@ PREFIX=m68k-eabi-elf
 
 # Dont modify below this line (unless you know what youre doing).
 CC=$(PREFIX)-gcc
-AS=$(PREFIX)-as
 LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
 CFLAGS=-m$(CPU) -Wall -g -static -I../include -I. -msoft-float -MMD -MP -O
 LFLAGS=--script=platform.ld -L../libmetal -lmetal
-AFLAGS=-m$(CPU) -Wall -c -g
 
 SRC=$(wildcard *.c)
 DEP=$(SRC:%.c=%.d)
@@ -57,6 +55,8 @@ bmbinary: $(OBJ)
 	$(LD) -o $@ $(OBJ) $(LFLAGS)
 
 -include $(DEP)
+
+all: clean bmbinary rom
 
 crt: crt0.o
 

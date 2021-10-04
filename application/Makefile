@@ -32,7 +32,6 @@ PREFIX=m68k-eabi-elf
 
 # Dont modify below this line (unless you know what youre doing).
 CC=$(PREFIX)-gcc
-AS=$(PREFIX)-as
 LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
@@ -56,6 +55,8 @@ bmbinary: $(OBJ)
 	$(LD) -o $@ $(OBJ) $(LFLAGS)
 
 -include $(DEP)
+
+all: clean bmbinary rom
 
 crt: crt0.o
 
