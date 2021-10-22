@@ -24,13 +24,13 @@ m68k_bare_metal % ./macos-build-toolchain.sh
 
 **Note:** You may need to attend the installation, as I noticed on my Mac that some printer dialogs popped up... I'm not sure why, but I had to close them as they would pause the build while waiting for you to do something.
 
-When the build has completed successfully, you can remove two temporary directories that were created:
+When the build has completed successfully, you can remove two temporary directories that were created (this will free up around 2GB of disk space):
 
 ```
-m68k_bare_metal % rm -rf build sources
+m68k_bare_metal % rm -rf toolchain/build toolchain/sources
 ```
 
-You will find that a new directory has been created, called `m68k-unknown-elf`. Inside here are the various binaries that were built in the process above.
+You will find that a new directory has been created, called `toolchain/m68k-eabi-elf-x.x.x` (where x.x.x is the GCC version number that has been built). Inside here are the various binaries that were built in the process above. Each toolchain is contained within its own directory, so it is possible to retain multiple different versions if the need should arise.
 
 The only thing left to do is to modify the Makefiles to point to the binaries that have been built on your Mac. You'll want to modify the `Makefile`s within the `standalone` and `application` directories, so that any projects you create from these will incorporate the changes.
 
@@ -39,9 +39,10 @@ Inside each Makefile, you will find the `PREFIX` variable towards the top. This 
 Modify the PREFIX variable to point to the binaries that have been compiled on your Mac, e.g.
 
 ```
-PREFIX=~/m68k_bare_metal/m68k-unknown-elf/bin/m68k-unknown-elf
+PREFIX=~/m68k_bare_metal/toolchain/m68k-eabi-elf-x.x.x/bin/m68k-eabi-elf
 ```
 
 You could instead modify your `PATH` environment variable instead of specifying an absolute path within the Makefiles - I leave this as an exercise for the user. :-)
 
 And that should be it for installing on macOS!
+
