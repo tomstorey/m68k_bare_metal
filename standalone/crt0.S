@@ -55,42 +55,42 @@ _start:
 #endif /* USEVBR */
 
         /* Initialise (clear) the BSS area */
-        movea.l #_bss_start, %a0        /* Starting address */
+1:      movea.l #_bss_start, %a0        /* Starting address */
         movea.l #_bss_end, %a1          /* End address */
 
-1:      cmpa.l  %a1, %a0                /* Check if start < end */
-        bge     2f
+2:      cmpa.l  %a1, %a0                /* Check if start < end */
+        bge     3f
 
         clr.w   %a0@+                   /* Clear word and increment start */
 
-        bra     1b
+        bra     2b
 
         /* Copy initialised data from ROM to RAM */
-2:      movea.l #_text_end, %a0         /* Source address */
+3:      movea.l #_text_end, %a0         /* Source address */
         movea.l #_data_start, %a1       /* Destination start address */
         movea.l #_data_end, %a2         /* Destination end address */
 
-3:      cmpa.l  %a2, %a1                /* Check if start < end */
-        bge     4f
+4:      cmpa.l  %a2, %a1                /* Check if start < end */
+        bge     5f
 
         move.w  %a0@+, %a1@+            /* Copy a word from ROM to RAM */
 
-        bra     3b
+        bra     4b
 
         /* Execute hardware init hook if present */
-4:      move.l  hardware_init_hook, %d0
-        beq     5f
-        movea.l %d0, %a0
-        jsr     (%a0)
-
-        /* Execute software init hook if present */
-5:      move.l  software_init_hook, %d0
+5:      move.l  hardware_init_hook, %d0
         beq     6f
         movea.l %d0, %a0
         jsr     (%a0)
 
+        /* Execute software init hook if present */
+6:      move.l  software_init_hook, %d0
+        beq     7f
+        movea.l %d0, %a0
+        jsr     (%a0)
+
         /* Jump to main() */
-6:      jmp     main
+7:      jmp     main
 
         /* In a bare metal environment, main() should not return as there is
          * nowhere to resume execution from. Behaviour is undefined if this
