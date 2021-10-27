@@ -22,7 +22,7 @@ OBJ=main.o
 #
 # 68000, 68010, 68020, 68030, 68040, 68060, cpu32 (includes 68332 and 68360),
 # 68302
-CPU=68010
+CPU=68000
 
 # Uncomment either of the following depending on how you have installed gcc on
 # your system. m68k-linux-gnu for Linux installations, m68k-eabi-elf if gcc was
