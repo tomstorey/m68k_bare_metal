@@ -58,7 +58,8 @@ bmbinary: $(OBJ)
 
 all: bmbinary rom clean
 
-crt: crt0.o
+crt:
+	$(CC) $(CFLAGS) -c crt0.S
 
 clean:
 	rm -f $(OBJ) $(DEP)
