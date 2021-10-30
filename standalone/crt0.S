@@ -78,13 +78,13 @@ _start:
         bra     4b
 
         /* Execute hardware init hook if present */
-5:      move.l  hardware_init_hook, %d0
+5:      move.l  #hardware_init_hook, %d0
         beq     6f
         movea.l %d0, %a0
         jsr     (%a0)
 
         /* Execute software init hook if present */
-6:      move.l  software_init_hook, %d0
+6:      move.l  #software_init_hook, %d0
         beq     7f
         movea.l %d0, %a0
         jsr     (%a0)
