@@ -81,7 +81,7 @@ Really this is just as simple as making a copy of either the `standalone` or `ap
 
 Open `Makefile` in your favourite editor and modify the CPU and PREFIX variables as required for your target and environment.
 
-Once you have done this, the first thing to do is to assemble `crt0.S`.
+Once you have done this, the first thing to do is to assemble `crt0.S`. Take a quick look at the very beginning of this file and determine if there are any settings that you want to change for your situation, otherwise, run:
 
 ```
 ~/m68k_bare_metal/myproject$ make crt
