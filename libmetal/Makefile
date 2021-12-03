@@ -31,13 +31,13 @@ S_OBJ=$(S_SRC:%.S=%.o)
 
 -include $(DEP)
 
-all: libmetal
+all: libmetal clean
 
 libmetal: $(C_OBJ) $(S_OBJ)
-	$(AR) rcs libmetal.a $(C_OBJ) $(S_OBJ)
+	$(AR) rcs libmetal-$(CPU).a $(C_OBJ) $(S_OBJ)
 
 clean:
-	rm $(DEP) $(C_OBJ) $(S_OBJ)
+	rm -f $(DEP) $(C_OBJ) $(S_OBJ)
 
 dumps:
-	$(OBJDUMP) -m$(CPU) -belf32-m68k -St libmetal.a
+	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -St libmetal-$(CPU).a
