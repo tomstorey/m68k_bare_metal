@@ -37,18 +37,18 @@ OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
 CFLAGS=-m$(CPU) -Wall -g -static -I../include -I. -msoft-float -MMD -MP -O
-LFLAGS=--script=application.ld -L../libmetal -lmetal
+LFLAGS=--script=application.ld -L../libmetal -lmetal-$(CPU)
 
 SRC=$(wildcard *.c)
 DEP=$(SRC:%.c=%.d)
 
-%.o: %.c
+%/%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%.o: %.S
+%/%.o: %.S
 	$(CC) $(CFLAGS) -c $<
 
-%.o: %.s
+%/%.o: %.s
 	$(CC) $(CFLAGS) -c $<
 
 bmbinary: $(OBJ)
@@ -56,7 +56,7 @@ bmbinary: $(OBJ)
 
 -include $(DEP)
 
-all: bmbinary rom clean
+all: bmbinary rom
 
 crt:
 	$(CC) $(CFLAGS) -c crt0.S
@@ -69,12 +69,12 @@ rom:
 	$(OBJCOPY) -O srec bmbinary bmbinary.srec
 
 dump:
-	$(OBJDUMP) -m$(CPU) -belf32-m68k -dt -j.text bmbinary
-	$(OBJDUMP) -m$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -dt -j.text bmbinary
+	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 dumps:
-	$(OBJDUMP) -m$(CPU) -belf32-m68k -St -j.text bmbinary
-	$(OBJDUMP) -m$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
+	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -St -j.text bmbinary
+	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -st -j.rodata -j.data -j.bss bmbinary
 
 hexdump:
 	hexdump -C bmbinary.rom
