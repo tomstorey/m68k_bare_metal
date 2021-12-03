@@ -12,7 +12,7 @@
         .extern _rom_base
         .extern _bss_start
         .extern _bss_end
-        .extern _text_end
+        .extern _rodata_end
         .extern _data_start
         .extern _data_end
         .weak hardware_init_hook
@@ -66,7 +66,7 @@ _start:
         bra     2b
 
         /* Copy initialised data from ROM to RAM */
-3:      movea.l #_text_end, %a0         /* Source address */
+3:      movea.l #_rodata_end, %a0       /* Source address */
         movea.l #_data_start, %a1       /* Destination start address */
         movea.l #_data_end, %a2         /* Destination end address */
 
