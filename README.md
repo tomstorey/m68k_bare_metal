@@ -59,11 +59,11 @@ At the time of writing, the tool chain is known to work on the following operati
 ### Build libmetal
 libmetal is just a "libc like library" that I have put together including a lot of standard libc style functions. Included is a `printf` (credit: https://github.com/eyalroz/printf) and `malloc` (credit: own work, inspired by FreeRTOS).
 
-libmetal should only need to be built once, and is then used in all of your future projects. If further source files or changes to source files are made within libmetal, then you will need to rebuild it.
+libmetal should only need to be built once per CPU type, and is then used in all of your future projects using that CPU. If further source files or changes to source files are made within libmetal, then you will need to rebuild it for each CPU type that you intend to use.
 
-To build libmetal, simply run `make && make clean` within the `libmetal` directory. Provided there are no blocking errors, you will be left with a file called `libmetal.a`, and at that point you are done.
+To build libmetal, simply run `make` within the `libmetal` directory. Provided there are no blocking errors, you will be left with a file called `libmetal-xxxx.a` (where xxxx is the CPU type), and at that point you are done.
 
-Dont forget to modify the CPU type and select your gcc prefix in the `Makefile` as required.
+Dont forget to modify the CPU type and select your gcc prefix in the `Makefile` as required - the CPU type influences the output filename, as each copy of libmetal is built specific to that CPU.
 
 ### Create a "project"
 Really this is just as simple as making a copy of either the `standalone` or `application` directory, and naming it appropriately. You'll then work on the files in this directory.
