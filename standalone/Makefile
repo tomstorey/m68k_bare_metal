@@ -1,5 +1,4 @@
-# List all of the object files that will be combined into your final binary
-# in the OBJ variable.
+# List all of the source files that will be compiled into your binary.
 #
 # For example, if you have the following source files
 #
@@ -7,13 +6,16 @@
 #   user.c
 #   driver.s
 #
-# then your OBJ list would be
+# then your SRCS list would be
 #
-#   main.o user.o driver.o
+#   SRCS=main.c user.c driver.s
 #
-# The compiler will automatically choose the correct source file (.c, .s etc)
-# according to the object file (.o) to be created.
-OBJ=main.o
+# The list may span several lines of text by appending a backslash to each line,
+# for example:
+#
+#   SRCS=main.c user.c \
+#        driver.s
+SRCS=main.c
 
 # Specify the CPU type that you are targeting your build towards.
 #
@@ -31,38 +33,50 @@ CPU=68000
 PREFIX=m68k-eabi-elf
 
 # Dont modify below this line (unless you know what youre doing).
+BUILDDIR=build
+
 CC=$(PREFIX)-gcc
 LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
-CFLAGS=-m$(CPU) -Wall -g -static -I../include -I. -msoft-float -MMD -MP -O
+CFLAGS=-m$(CPU) -Wall -Wextra -g -static -I../include -I. -msoft-float -MMD -MP -O
 LFLAGS=--script=platform.ld -L../libmetal -lmetal-$(CPU)
 
-SRC=$(wildcard *.c)
-DEP=$(SRC:%.c=%.d)
+OBJS=$(patsubst %.c,$(BUILDDIR)/%.c.o,$(SRCS))
+OBJS:=$(patsubst %.S,$(BUILDDIR)/%.S.o,$(OBJS))
+OBJS:=$(patsubst %.s,$(BUILDDIR)/%.s.o,$(OBJS))
+DEPS=$(OBJS:.o=.d)
 
-%/%.o: %.c
+bmbinary: $(OBJS)
+	$(LD) -o $@ $(OBJS) $(LFLAGS)
+
+$(BUILDDIR):
+	mkdir -p $@
+
+$(BUILDDIR)/%.c.o: %.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%/%.o: %.S
-	$(CC) $(CFLAGS) -c $<
+$(BUILDDIR)/%.S.o: %.S
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-%/%.o: %.s
-	$(CC) $(CFLAGS) -c $<
+$(BUILDDIR)/%.s.o: %.s
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-bmbinary: $(OBJ)
-	$(LD) -o $@ $(OBJ) $(LFLAGS)
-
--include $(DEP)
+-include $(DEPS)
 
 all: bmbinary rom
 
-crt:
-	$(CC) $(CFLAGS) -c crt0.S
+crt: crt0.S
+	$(CC) $(CFLAGS) -c -o crt0.o crt0.S
+	rm -f crt0.d
 
 clean:
-	rm -f $(OBJ) $(DEP)
+	rm -rf $(BUILDDIR)/*
+	rm -f bmbinary*
 
 rom:
 	$(OBJCOPY) -O binary bmbinary bmbinary.rom

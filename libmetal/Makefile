@@ -14,30 +14,43 @@ CPU=68000
 PREFIX=m68k-eabi-elf
 
 # Dont modify below this line (unless you know what youre doing).
+BUILDDIR=build
+
 CC=$(PREFIX)-gcc
 AR=$(PREFIX)-ar
 OBJDUMP=$(PREFIX)-objdump
 
 CFLAGS=-m$(CPU) -Wall -g -static -I../include/ -msoft-float -MMD -MP -O3
 
-C_SRC=$(shell find . -name '*.c')
-S_SRC=$(shell find . -name '*.S')
-DEP=$(C_SRC:%.c=%.d)
-C_OBJ=$(C_SRC:%.c=%.o)
-S_OBJ=$(S_SRC:%.S=%.o)
-
-%.o: %.c %.S
-	$(CC) $(CFLAGS) -c -o $@ $<
-
--include $(DEP)
+C_SRCS=$(shell find . -name '*.c')
+S_SRCS=$(shell find . -name '*.s')
+SS_SRCS=$(shell find . -name '*.S')
+SRCS=$(C_SRCS) $(S_SRCS) $(SS_SRCS)
+OBJS=$(patsubst %.c,$(BUILDDIR)/%.c.o,$(SRCS))
+OBJS:=$(patsubst %.s,$(BUILDDIR)/%.s.o,$(OBJS))
+OBJS:=$(patsubst %.S,$(BUILDDIR)/%.S.o,$(OBJS))
+DEPS=$(OBJS:.o=.d)
 
 all: libmetal clean
 
-libmetal: $(C_OBJ) $(S_OBJ)
-	$(AR) rcs libmetal-$(CPU).a $(C_OBJ) $(S_OBJ)
+$(BUILDDIR):
+	mkdir -p $@
+
+$(BUILDDIR)/%.c.o: %.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILDDIR)/%.S.o: %.S
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+-include $(DEPS)
+
+libmetal: $(OBJS)
+	$(AR) rcs libmetal-$(CPU).a $(OBJS)
 
 clean:
-	rm -f $(DEP) $(C_OBJ) $(S_OBJ)
+	rm -rf $(BUILDDIR)/*
 
 dumps:
 	$(OBJDUMP) -mm68k:$(CPU) -belf32-m68k -St libmetal-$(CPU).a

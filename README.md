@@ -16,6 +16,8 @@
   * [Exception handling routines](#exception-handling-routines)
   * [Interrupt Service Routines](#interrupt-service-routines)
 - [Anything Else](#anything-else)
+  * [Updates](#updates)
+    + [November 2024: object filenames and `build` directory](#november-2024-object-filenames-and-build-directory)
   * [TODOs](#todos)
 
 This repository contains my efforts to create an "idiot proof bare metal m68k cross compiler toolchain of sorts."
@@ -34,7 +36,7 @@ In my solution, I want to take some C source files (and perhaps some assembly so
 
 To achieve this I have made a minimal linker script that allows you to position and dimension your ROM and RAM memories as required. The linker script also pulls in a reasonably vanilla flavoured `crt0` that I made, and creates the exception vector table (including reset vector).
 
-Also included is a `Makefile` to help make building your code easier. Essentially the only thing you need to do with the Makefile is list each of the object file names that will be linked together to produce your binary (the compiler, `gcc` in my case, takes care of working out the details including dependencies for C source files).
+Also included is a `Makefile` to help make building your code easier. Essentially the only thing you need to do with the Makefile is list each of the source file names that will be linked together to produce your binary (the compiler, `gcc` in my case, takes care of working out the details including dependencies for C source files).
 
 Other than that, you just start writing code and run `make`! I think that's pretty simple.
 
@@ -53,8 +55,10 @@ At the time of writing, the tool chain is known to work on the following operati
 
  - Ubuntu 18.04 and 20.04
  - Debian 9.12 and 10
- - Windows 10 with WSL
- - macOS High Sierra (10.13), Catalina (10.15), Big Sur (11.6)
+ - Windows 10 and 11 with WSL
+ - macOS High Sierra (10.13), Catalina (10.15), Big Sur (11.6), Sonoma (14.7) - realistically, everything between the oldest and newest listed versions and probably a bit either side, too
+
+Shell scripts are provided to build a toolchain from sources on both linux and macOS.
 
 ### Build libmetal
 libmetal is just a "libc like library" that I have put together including a lot of standard libc style functions. Included is a `printf` (credit: https://github.com/eyalroz/printf) and `malloc` (credit: own work, inspired by FreeRTOS).
@@ -87,7 +91,7 @@ Once you have done this, the first thing to do is to assemble `crt0.S`. Take a q
 ~/m68k_bare_metal/myproject$ make crt
 ```
 
-You'll then notice a file called `crt.o` in your project directory. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build):
+You'll then notice a file called `crt.o`. This object file is needed by the linker, and is the first code that will execute when the system starts up. `crt0` is responsible for (in a standalone build):
 
 * ensuring interrupts are masked by default
 * setting up the stack pointer (manually, notes included)
@@ -99,7 +103,7 @@ You'll then notice a file called `crt.o` in your project directory. This object 
 After all of this, it then jumps to your `main()` routine. In an application build, `crt0` only copies initialised variables into RAM, zeroises the .bss section (uninitialised variables) and jumps to `main()`.
 
 ### Linker script
-The default linker script configuration places ROM at address 0 with a size of 0x100000 (1 megabyte), and RAM at 0x100000 with a size of 0x100000. Space is also reserved for the stack which is initialised to the top of RAM, and all remaining space will be allocated to the heap.
+The default linker script configuration places ROM at address 0 with a size of 0x100000 (1 megabyte), and RAM at 0x100000 with a size of 0x100000. Space is also reserved for the stack which is initialised to the top of RAM, and all remaining space will be allocated to the heap from which `malloc` will allocate memory.
 
 You may need to modify these values to suit your system and application memory layout and requirements. If you do, be sure to `make clean` and rebuild your project to ensure that the new memory layout is updated in your binary. It is not necessary to rebuild crt0 if you simply modify the memory layout.
 
@@ -108,7 +112,7 @@ To do this, open `platform.ld` in your preferred editor, and look at the `base` 
  - `base` refers to the very first memory address of that memory type
  - `sz` refers to the number of bytes provided by that memory
 
-The SSP (Supervisor Stack Pointer) will be initialised to the very top of memory, thus assuming that the stack grows downwards with pre-decrement. Therefore, in the default configuration, the SSP will point to 0x200000, and the first value to be pushed to the stack will be written to 0x1FFFFC (long) or 0x1FFFFE (word).
+The SSP (Supervisor Stack Pointer) will be initialised to the very top of memory, thus assuming that the stack grows downwards with pre-decrement. Therefore, in the default configuration, the SSP will point to 0x200000, and the first value to be pushed to the stack will be written to 0x1FFFFC (long) or 0x1FFFFE (word or byte).
 
 The initial PC (Program Counter) value will point to the address of `_start`, which is located in `crt0.S`.
 
@@ -129,24 +133,23 @@ Included is a very simple `main.c`, so you can test that everything is working s
 
 ```
 ~/m68k_bare_metal/myproject$ make
-m68k-linux-gnu-gcc -m68000 -Wall -g -static -I. -msoft-float -MMD -MP -c -o main.o main.c
-m68k-linux-gnu-ld -o bmbinary main.o --script=platform.ld
+m68k-eabi-elf-gcc -m68000 -Wall -g -static -I. -msoft-float -MMD -MP -c -o build/main.c.o main.c
+m68k-eabi-elf-ld -o bmbinary build/main.c.o --script=platform.ld -L../libmetal -lmetal-68000
 ~/m68k_bare_metal/myproject$ ls -la
--rw-r--r-- 1 tom tom  1456 May 31 14:52 Makefile
--rwxrwxr-x 1 tom tom 19056 May 31 14:54 bmbinary
--rw-rw-r-- 1 tom tom  2136 May 31 14:53 crt0.o
--rw-r--r-- 1 tom tom  3376 May 31 14:52 crt0.S
--rw-r--r-- 1 tom tom    54 May 31 14:52 main.c
--rw-rw-r-- 1 tom tom    15 May 31 14:54 main.d
--rw-rw-r-- 1 tom tom  2112 May 31 14:54 main.o
--rw-r--r-- 1 tom tom  5540 May 31 14:52 platform.ld
+-rwxrwxrwx 1 tom tom  2238 Nov 28 10:28 Makefile
+-rwxrwxrwx 1 tom tom  1392 Nov 28 10:26 platform.ld
+-rwxrwxrwx 1 tom tom 18532 Nov 28 10:29 bmbinary
+drwxrwxrwx 1 tom tom  4096 Nov 28 10:29 build
+-rwxrwxrwx 1 tom tom  1386 Feb  6  2024 crt0.S
+-rwxrwxrwx 1 tom tom  1784 Nov 28 10:29 crt0.o
+-rwxrwxrwx 1 tom tom    33 Feb  6  2024 main.c
 ```
 
 If this works without any errors you are off to a very good start. From here you can proceed to write further code, and create additional source files. Worth noting, dependencies for .c files are automatically generated.
 
-For each source file that you create, you will need to add it to `Makefile` in order for it to be compiled and linked.
+For each source file that you create, you will need to add it to `Makefile` in order for it to be compiled and linked. Fortunately this is a very simple process, just follow the instructions at the top of the Makefile.
 
-Fortunately this is a very simple process, and all you need to do is add what will be the corresponding object filename (.o) to a variable at the top of the Makefile. Instructions are included to demonstrate how you should do this.
+During compilation, and to keep your working directory clean, all files will be built in the `build` directory, in the same directory tree as the original source files.
 
 Once you are finished writing code and are ready to run it in your system, running `make rom` will output a file called `bmbinary.rom` which can be written to your ROMs and installed in the system.
 
@@ -161,7 +164,7 @@ The Makefile includes some extra rules to help with your development, these are:
  - `make dump` displays a disassembly of `bmbinary`
  - `make dumps` displays a disassembly of `bmbinary` with source code intermixed
  - `make hexdump` will produce a hex dump of `bmbinary.rom`
- - `make clean` will remove all `.o`, `.d`, and the `bmbinary` and `bmbinary.rom` files from your project directory (except `crt0.o`)
+ - `make clean` will clear out the `build` directory, and remove the `bmbinary*` files from your project directory. `crt0.o` is maintained.
 
 # Advanced Topics
 **Note:** Most of what is written below applies only to standalone builds, as application builds do not include an EVT.
@@ -265,5 +268,16 @@ Happy interrupt vectoring!
 # Anything Else
 Please file an issue with me for any questions you have, I'll do my best to help.
 
+## Updates
+### November 2024: object filenames and `build` directory
+As time has progressed I've found myself working on ever more complex projects. These have included mixing more assembly and C sources, and also placing files into a directory tree.
+
+The original version of this toolchain assumed that all files would be in one root directory, and didn't account for files sharing the same name but with an extension, e.g. `driver.c` and `driver.s`. Hey, times were simpler back then, and I was still developing my toolchain knowledge. :-)
+
+I have recently updated my toolchain to support building files in a more complex directory structure, and to also support multiple files with a similar name in one directory. Now, each file is compiled into an object file by taking its full file name and adding the `.o` extension, meaning that you can now have `driver.c` and `driver.s` compiled in the same directory, which will result in `driver.c.o` and `driver.s.o` respectively. This allows files of different types, but which are related, to share the same name.
+
+Additionally, all object files will be compiled in to the `build` directory using the same directory structure as the original source files, which I feel helps to keep the root directory of the project much cleaner (not being littered with `.o` and `.d` files any more!)
+
 ## TODOs
- - Integrate a GDB stub for debugging
+ - FreeBSD build script
+ - Integrate a GDB stub or similar for debugging
