@@ -41,12 +41,13 @@ Also included is a `Makefile` to help make building your code easier. Essentiall
 Other than that, you just start writing code and run `make`! I think that's pretty simple.
 
 ## How To Use
-There are two different "build environment flavours" that you can choose from:
+There are some different "build environment flavours" that you can choose from:
 
- - **standalone**: this is a build that will run by itself on your system. It will include a exception vector table (EVT), and program code (crt0, your code, read only/constant data, initialised variables)
- - **application**: this is a build that might, for example, run along side a standalone build. This kind of build includes all of the above with the exception of a pared down crt0 and excludes the EVT
+ - **standalone**: this is a build that will run by itself on your system. It will include a exception vector table (EVT), and program code (crt0, your code, read only/constant data, initialised variables).
+ - **application**: this is a build that might, for example, run along side a standalone build. This kind of build includes all of the above with the exception of a pared down crt0 and excludes the EVT.
+ - **pcrel_application**: this type of build uses PC relative operations for working with variables and calling functions. PC relative code can be compiled, and then loaded and run from anywhere in RAM, but due to relative operations having a limited range of +/- 32K, the size of the application and all of its accompanying data is limited to 32K in total. This kind of build could lend itself nicely to device drivers for an operating system, or very simple applications.
 
-The idea behind these two different builds comes down to how you might build and write software for a bare metal system. For example, you may use a standalone build to implement some kind of operating system or monitor, and perhaps this allows you to load in code over a serial link and execute it. That code may be some kind of application that you want to test and debug, and which itself does not require an EVT.
+The idea behind these different builds comes down to how you might build and write software for a bare metal system. For example, you may use a standalone build to implement some kind of operating system or monitor, and perhaps this allows you to load in code over a serial link and execute it. That code may be some kind of application that you want to test and debug, and which itself does not require an EVT.
 
 ### Get started (installation)
 You can build or install the required tools on a variety of operating systems. Installation instructions are broken out by operating system (or group of) as each is a little different to the last, so please refer to the appropriate INSTALL-xxxx.md file in this repo.
