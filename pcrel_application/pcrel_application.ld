@@ -26,29 +26,25 @@ SECTIONS {
     .text : {
         _text_start = .;
         *(.text .text.*)
-        . = ALIGN(0x10);
         _text_end = .;
     } > code
 
     .rodata : AT(_text_end) {
         _rodata_start = .;
         *(.rodata .rodata.*)
-        . = ALIGN(0x10);
         _rodata_end = .;
     } > code
 
     .data : AT(_rodata_end) {
         _data_start = .;
         *(.data .data.*)
-        . = ALIGN(0x10);
         _data_end = .;
     } > code
 
-    .bss : {
+    .bss : AT(_data_end) {
         _bss_start = .;
         *(.bss .bss.*)
         *(COMMON)
-        . = ALIGN(0x10);
         _bss_end = .;
     } > code
 }
