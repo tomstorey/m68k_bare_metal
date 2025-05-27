@@ -3,9 +3,6 @@
         /* A bunch of variables supplied by the linker */
         .extern _bss_start
         .extern _bss_end
-        .extern _rodata_end
-        .extern _data_start
-        .extern _data_end
         .extern main
 
         .section .text
