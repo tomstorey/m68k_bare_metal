@@ -10,16 +10,14 @@
  * forwards, and a reference at the end of the binary can only look 32K
  * backwards).
  */
-_rom_base = 0;
-_rom_sz = 32K;
+_bin_base = 0;
+_bin_sz = 32K;
 
 STARTUP(crt0.o)
 OUTPUT_ARCH(m68k)
 
-__rom_end = (_rom_base + _rom_sz);
-
-__code_start = _rom_base;
-__code_sz = _rom_sz;
+__code_start = _bin_base;
+__code_sz = _bin_sz;
 
 MEMORY {
     code (rwx) : ORIGIN = __code_start, LENGTH = __code_sz
