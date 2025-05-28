@@ -1,23 +1,20 @@
 /*
- * Modify the ROM and RAM base and sz (size) variables below to
- * suit your systems memory layout.
- *
- *   base indicates at what address a memory begins
- *   sz indicates the size of that memory
- *
- * Values can be specified in decimal, hexadecimal, or as units such
- * as 1K or 1M.
+ * TODO
  */
-_rom_base = 0;
-_rom_sz = 1M;
+_bin_sz = 1M;
+
+/*
+ * Dont modify below this line (unless you know what youre doing),
+ * except to add user interrupt vectors.
+ */
+
+_bin_base = 0;
 
 STARTUP(crt0.o)
 OUTPUT_ARCH(m68k)
 
-__rom_end = (_rom_base + _rom_sz);
-
-__code_start = _rom_base;
-__code_sz = _rom_sz;
+__code_start = _bin_base;
+__code_sz = _bin_sz;
 
 MEMORY {
     code (rwx) : ORIGIN = __code_start, LENGTH = __code_sz
