@@ -13,9 +13,20 @@
         .type _start, @function
         .globl _start
 _start:
-        /* Initialise (clear) the BSS area */
-        lea     %pc@(_bss_start), %a0   /* Starting address */
-        lea     %pc@(_bss_end), %a1     /* End address */
+        lea     %pc@(_start), %a0       /* Gets the physical ddress of the application code */
+        move.l  %a0, %d5                /* Keep it for later */
+
+        /* Initialise (clear) the BSS area
+         *
+         * The application is compiled as if it were physically located at address 0, therefore all
+         * labels etc are relative to address 0. Its unlikely that the application will actually run
+         * from address 0, so the addresses of these labels have to be fixed up to represent their
+         * physical locations. This is done by adding in D5 as obtained above. */
+        movea.l #_bss_start, %a0        /* Start address of BSS */
+        movea.l #_bss_end, %a1          /* End address of BSS */
+
+        adda.l  %d5, %a0
+        adda.l  %d5, %a1
 
 0:      cmpa.l  %a1, %a0                /* Check if start < end */
         bge     1f
@@ -24,38 +35,29 @@ _start:
 
         bra     0b
 
-        /* The application is compiled as if it were located at address 0, therefore all entries in
-         * the Global Offset Table will be relative to address 0. Its probably unlikely that the
-         * binary will run from address 0 in a real system, therefore the GOT needs to be adjusted
-         * to add the base address where the application has been loaded to all of its entries. */
-1:      lea     %pc@(_start), %a0       /* Base address where the application has been loaded */
-        move.l  %a0, %d0
-        movea.l #_got_start, %a1        /* Start of the GOT, relative to address 0 */
-        movea.l #_got_end, %a2          /* End of the GOT, relative to address 0 */
+        /* As with the BSS section, the labels for the Global Offset Table need to be fixed up to
+         * represent their physical locations. */
+1:      movea.l #_got_start, %a0        /* Start address of the GOT */
+        movea.l #_got_end, %a1          /* End address of the GOT */
         
-        /* A1 and A2 will be relative addresses from the start of the applications binary image,
-         * which at compile time is assumed to be address 0. We need to add the base address where
-         * the image was loaded to get the physical address in memory where the GOT exists. */
-        adda.l  %d0, %a1
-        adda.l  %d0, %a2
+        adda.l  %d5, %a0
+        adda.l  %d5, %a1
 
-        /* Now loop through the GOT entries and add the base address */
-2:      cmpa.l  %a2, %a1                /* Check if start < end */
+2:      cmpa.l  %a1, %a0                /* Check if start < end */
         bge     3f
 
-        add.l   %d0, %a1@
-        addq.l  #4, %a1
+        add.l   %d5, %a0@+
 
         bra     2b
 
-        /* Setup A5 as the GOT pointer */
+        /* Set up A5 as the GOT pointer */
 3:      movea.l #_got_start, %a5
-        adda.l  %d0, %a5
+        adda.l  %d5, %a5
 
-        /* Jump to main() - main() will have a GOT entry, but we dont know which one it is, so work
-         * out its physical address manually */
+        /* Jump to main() - main() will have a GOT entry, but we dont know which one it is, so
+         * figure it out ourselves */
 4:      movea.l #main, %a0
-        adda.l  %d0, %a0
+        adda.l  %d5, %a0
         jmp     %a0@
 
         /* It is possible that main() may return in an application context, but
