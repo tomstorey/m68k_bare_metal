@@ -1,4 +1,5 @@
-/* The following values should NOT be modified. PC relative applications
+/*
+ * The following values should NOT be modified. PC relative applications
  * have no fixed base address - they may be loaded and executed anywhere in
  * memory. For simplicity sake we consider it to start from address 0.
  *
