@@ -17,12 +17,26 @@ With these two requirements taken care of, clone the repository:
 
 And then run the `macos-build-toolchain.sh` script.
 
+Now here's where things diverge a bit.
+
+## Intel based Macs
+
+The following instructions apply to Intel based Macs. See the section below for ARM based Macs (Apple Silicon).
+
 ```
 ~ % cd m68k_bare_metal
 m68k_bare_metal % ./macos-build-toolchain.sh
 ```
 
-**Note:** You may need to attend the installation, as I noticed on my Mac that some printer dialogs popped up... I'm not sure why, but I had to close them as they would pause the build while waiting for you to do something.
+## ARM based Macs (Apple Silicon)
+
+The toolchain does not currently build on ARM based Macs, at least the one I have access to which I have recently obtained (running Sequoia 15.5).
+
+I am working to resolve this. If you have the time and/or ability to help with this I would appreciate it.
+
+Once this works I will update this repository with further information. In the mean time I am tracking my progress in an issue: https://github.com/tomstorey/m68k_bare_metal/issues/4
+
+## Resume converged instructions
 
 When the build has completed successfully, you can remove two temporary directories that were created (this will free up around 2GB of disk space):
 
