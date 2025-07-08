@@ -15,18 +15,20 @@ With these two requirements taken care of, clone the repository:
 ~ % git clone https://github.com/tomstorey/m68k_bare_metal.git
 ```
 
-And then run the `macos-build-toolchain.sh` script.
-
 Now here's where things diverge a bit.
 
 ## Intel based Macs
 
-The following instructions apply to Intel based Macs. See the section below for ARM based Macs (Apple Silicon).
+The following instructions apply to Intel based Macs. For ARM based Macs (Apple Silicon), see the section below.
+
+Run the `macos-build-toolchain.sh` script.
 
 ```
 ~ % cd m68k_bare_metal
 m68k_bare_metal % ./macos-build-toolchain.sh
 ```
+
+Grab a coffee, this can take a while.
 
 ## ARM based Macs (Apple Silicon)
 
