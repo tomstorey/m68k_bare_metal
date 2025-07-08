@@ -56,7 +56,8 @@ At the time of writing, the tool chain is known to work on the following operati
  - Ubuntu 18.04 and 20.04
  - Debian 9.12 and 10
  - Windows 10 and 11 with WSL
- - macOS High Sierra (10.13), Catalina (10.15), Big Sur (11.6), Sonoma (14.7) - realistically, everything between the oldest and newest listed versions and probably a bit either side, too
+ - macOS (Intel) High Sierra (10.13), Catalina (10.15), Big Sur (11.6), Sonoma (14.7) - realistically, everything between the oldest and newest listed versions and probably a bit either side, too
+ - macOS (Apple Silicon) does not currently build :( (but I'm working on it)
 
 Shell scripts are provided to build a toolchain from sources on both linux and macOS.
 
