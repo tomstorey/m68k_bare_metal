@@ -15,7 +15,7 @@ With these two requirements taken care of, clone the repository:
 ~ % git clone https://github.com/tomstorey/m68k_bare_metal.git
 ```
 
-Now. based on the CPU architecture of your Mac, run one of the following build scripts:
+Now, based on the CPU architecture of your Mac, run one of the following build scripts:
 
  - `macos-intel-build-toolchain.sh` if you have a pre-Apple Silicon based Mac with an Intel CPU
  - `macos-arm64-build-toolchain.sh` if you have an ARM (Apple Silicon) based Mac
