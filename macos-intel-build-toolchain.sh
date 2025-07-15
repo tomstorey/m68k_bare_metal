@@ -22,6 +22,7 @@ TARGET=m68k-eabi-elf
 PREFIX=$PWD/toolchain/$TARGET
 
 MIRROR=http://ftpmirror.gnu.org
+# MIRROR=https://mirror.team-cymru.com/gnu
 
 BINUTILS=binutils-2.37
 BINUTILS_URL=$MIRROR/binutils/$BINUTILS.tar.xz
