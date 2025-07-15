@@ -18,6 +18,7 @@
 - [Anything Else](#anything-else)
   * [Updates](#updates)
     + [November 2024: object filenames and `build` directory](#november-2024-object-filenames-and-build-directory)
+    + [July 2025: macOS build scripts for Intel and ARM (Apple Silicon)](#july-2025-macos-build-scripts-for-intel-and-arm-apple-silicon)
   * [TODOs](#todos)
 
 This repository contains my efforts to create an "idiot proof bare metal m68k cross compiler toolchain of sorts."
@@ -57,7 +58,7 @@ At the time of writing, the tool chain is known to work on the following operati
  - Debian 9.12 and 10
  - Windows 10 and 11 with WSL
  - macOS (Intel) High Sierra (10.13), Catalina (10.15), Big Sur (11.6), Sonoma (14.7) - realistically, everything between the oldest and newest listed versions and probably a bit either side, too
- - macOS (Apple Silicon) does not currently build :( (but I'm working on it)
+ - macOS (ARM/Apple Silicon) Sequoia (15.5)
 
 Shell scripts are provided to build a toolchain from sources on both linux and macOS.
 
@@ -278,6 +279,11 @@ The original version of this toolchain assumed that all files would be in one ro
 I have recently updated my toolchain to support building files in a more complex directory structure, and to also support multiple files with a similar name in one directory. Now, each file is compiled into an object file by taking its full file name and adding the `.o` extension, meaning that you can now have `driver.c` and `driver.s` compiled in the same directory, which will result in `driver.c.o` and `driver.s.o` respectively. This allows files of different types, but which are related, to share the same name.
 
 Additionally, all object files will be compiled in to the `build` directory using the same directory structure as the original source files, which I feel helps to keep the root directory of the project much cleaner (not being littered with `.o` and `.d` files any more!)
+
+### July 2025: macOS build scripts for Intel and ARM (Apple Silicon)
+I received an ARM based Mac for work in 2025 and naturally had to try installing my toolchain on this machine. This wasn't immediately successful as there were some differences with the way `brew` installed some supporting libraries on ARM based Macs compared to Intel based Macs. Additionally, the version of clang that was included with macOS Sequoia was not able to compile some code supplied with the `binutils` and `gcc` software suites as it seems to default to a more modern C standard than that code has been written to fit. But after some head scratching and much searching I have been able to produce a build script that should now successfully build the toolchain on at least Sequoia.
+
+Next, `libmetal` did not like building with the most recent versions of GCC, but GCC 11.2.0 as used by the Intel version of the build script would not successfully compile on Sequoia either, so GCC has been updated for the ARM build script to one which seems to be a happy middle ground.
 
 ## TODOs
  - FreeBSD build script
