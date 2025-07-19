@@ -12,6 +12,7 @@ CPU=68000
 # built from scratch e.g. on a Mac by running the build script.
 # PREFIX=m68k-linux-gnu
 PREFIX=m68k-eabi-elf
+#PREFIX=/mnt/c/Projects/git/m68k_bare_metal/toolchain/m68k-eabi-elf-14.3.0/bin/m68k-eabi-elf
 
 # Dont modify below this line (unless you know what youre doing).
 BUILDDIR=build
@@ -30,6 +31,8 @@ OBJS=$(patsubst %.c,$(BUILDDIR)/%.c.o,$(SRCS))
 OBJS:=$(patsubst %.s,$(BUILDDIR)/%.s.o,$(OBJS))
 OBJS:=$(patsubst %.S,$(BUILDDIR)/%.S.o,$(OBJS))
 DEPS=$(OBJS:.o=.d)
+
+.PHONY: all libmetal clean dumps
 
 all: libmetal clean
 

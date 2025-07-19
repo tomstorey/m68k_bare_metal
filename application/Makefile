@@ -40,7 +40,7 @@ LD=$(PREFIX)-ld
 OBJCOPY=$(PREFIX)-objcopy
 OBJDUMP=$(PREFIX)-objdump
 
-CFLAGS=-m$(CPU) -Wall -g -static -I../include -I. -msoft-float -MMD -MP -O
+CFLAGS=-m$(CPU) -Wall -Wextra -g -static -I../include -I. -msoft-float -MMD -MP -O
 LFLAGS=--script=application.ld -L../libmetal -lmetal-$(CPU)
 
 OBJS=$(patsubst %.c,$(BUILDDIR)/%.c.o,$(SRCS))
@@ -48,8 +48,13 @@ OBJS:=$(patsubst %.S,$(BUILDDIR)/%.S.o,$(OBJS))
 OBJS:=$(patsubst %.s,$(BUILDDIR)/%.s.o,$(OBJS))
 DEPS=$(OBJS:.o=.d)
 
+.PHONY: bmbinary release all crt clean rom dump dumps hexdump
+
 bmbinary: $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LFLAGS)
+
+release: CFLAGS+= -DNDEBUG
+release: all
 
 $(BUILDDIR):
 	mkdir -p $@
