@@ -48,8 +48,13 @@ OBJS:=$(patsubst %.S,$(BUILDDIR)/%.S.o,$(OBJS))
 OBJS:=$(patsubst %.s,$(BUILDDIR)/%.s.o,$(OBJS))
 DEPS=$(OBJS:.o=.d)
 
+.PHONY: bmbinary release all crt clean rom dump dumps hexdump
+
 bmbinary: $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LFLAGS)
+
+release: CFLAGS+= -DNDEBUG
+release: all
 
 $(BUILDDIR):
 	mkdir -p $@
