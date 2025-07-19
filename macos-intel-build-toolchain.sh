@@ -24,10 +24,10 @@ PREFIX=$PWD/toolchain/$TARGET
 MIRROR=http://ftpmirror.gnu.org
 # MIRROR=https://mirror.team-cymru.com/gnu
 
-BINUTILS=binutils-2.37
+BINUTILS=binutils-2.44
 BINUTILS_URL=$MIRROR/binutils/$BINUTILS.tar.xz
 
-GCCVER=11.2.0
+GCCVER=13.4.0
 GCC=gcc-$GCCVER
 GCC_URL=$MIRROR/gcc/$GCC/$GCC.tar.xz
 
@@ -35,16 +35,18 @@ brew install wget mpfr mpc libmpc gmp # Can't check this, because brew errors if
 
 if [ ! -f toolchain/sources/$BINUTILS.tar.xz ]; then
   echo Fetching $BINUTILS_URL
-  (cd toolchain/sources && wget $BINUTILS_URL) || exit 1
+  (cd toolchain/sources && wget -q --show-progress $BINUTILS_URL) || exit 1
 fi
 
 if [ ! -f toolchain/sources/$GCC.tar.xz ]; then
   echo Fetching $GCC_URL
-  (cd toolchain/sources && wget $GCC_URL) || exit 1
+  (cd toolchain/sources && wget -q --show-progress $GCC_URL) || exit 1
 fi
 
-test -d toolchain/sources/$BINUTILS || (cd toolchain/sources && tar xjvf ../sources/$BINUTILS.tar.xz) || exit 1
-test -d toolchain/sources/$GCC || (cd toolchain/sources && tar xjvf ../sources/$GCC.tar.xz) || exit 1
+echo Extracting $BINUTILS ...
+test -d toolchain/sources/$BINUTILS || (cd toolchain/sources && tar xjf ../sources/$BINUTILS.tar.xz) || exit 1
+echo Extracting $GCC ...
+test -d toolchain/sources/$GCC || (cd toolchain/sources && tar xjf ../sources/$GCC.tar.xz) || exit 1
 mkdir -p toolchain/build
 
 if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-nm ]; then
@@ -60,3 +62,5 @@ if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-gcc ]; then
   mkdir -p toolchain/build/gcc
   (cd toolchain/build/gcc && ../../sources/$GCC/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER --enable-languages=c --with-gmp=/usr/local --with-mpfr=/usr/local --with-mpc=/usr/local && make -j $CORES all-gcc && make install-gcc) || exit 1
 fi
+
+echo All done!

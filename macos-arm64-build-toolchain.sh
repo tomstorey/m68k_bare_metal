@@ -65,23 +65,25 @@ brew install wget mpfr mpc libmpc gmp # Can't check this, because brew errors if
 
 if [ ! -f toolchain/sources/$BINUTILS.tar.xz ]; then
   echo Fetching $BINUTILS_URL
-  (cd toolchain/sources && wget $BINUTILS_URL) || exit 1
+  (cd toolchain/sources && wget -q --show-progress $BINUTILS_URL) || exit 1
 fi
 
 if [ ! -f toolchain/sources/$GCC.tar.xz ]; then
   echo Fetching $GCC_URL
-  (cd toolchain/sources && wget $GCC_URL) || exit 1
+  (cd toolchain/sources && wget -q --show-progress $GCC_URL) || exit 1
 fi
 
-test -d toolchain/sources/$BINUTILS || (cd toolchain/sources && tar xjvf ../sources/$BINUTILS.tar.xz) || exit 1
-test -d toolchain/sources/$GCC || (cd toolchain/sources && tar xjvf ../sources/$GCC.tar.xz) || exit 1
+echo Extracting $BINUTILS ...
+test -d toolchain/sources/$BINUTILS || (cd toolchain/sources && tar xjf ../sources/$BINUTILS.tar.xz) || exit 1
+echo Extracting $GCC ...
+test -d toolchain/sources/$GCC || (cd toolchain/sources && tar xjf ../sources/$GCC.tar.xz) || exit 1
 mkdir -p toolchain/build
 
 if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-nm ]; then
   echo Building binutils
   rm -rf toolchain/build/binutils
   mkdir -p toolchain/build/binutils
-  (cd toolchain/build/binutils && ../../sources/$BINUTILS/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER && make -j $CORES CC="$CC" CXX="$CXX" && make install) || exit 1
+  (cd toolchain/build/binutils && ../../sources/$BINUTILS/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER && make -j $CORES && make install) || exit 1
 fi
 
 if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-gcc ]; then
@@ -90,3 +92,5 @@ if [ ! -f $PREFIX-$GCCVER/bin/$TARGET-gcc ]; then
   mkdir -p toolchain/build/gcc
   (cd toolchain/build/gcc && ../../sources/$GCC/configure --target=$TARGET --disable-werror --prefix=$PREFIX-$GCCVER --enable-languages=c --with-gmp=/opt/homebrew/var/homebrew/linked/gmp --with-mpfr=/opt/homebrew/var/homebrew/linked/mpfr --with-mpc=/opt/homebrew/var/homebrew/linked/libmpc && make -j $CORES all-gcc && make install-gcc) || exit 1
 fi
+
+echo All done!
