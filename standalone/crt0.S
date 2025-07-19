@@ -4,9 +4,6 @@
  * to RAM address 0 when the ROM has been remapped away from address 0 */
 /* #define NO_EVT_COPY */
 
-#define USEVBR (defined(mc68010) || defined(mc68020) || defined(mc68030) || \
-                defined(mc68040) || defined(mc68060) || defined(mc68332))
-
         /* A bunch of variables supplied by the linker */
         .extern _stack_end
         .extern _rom_base
@@ -32,7 +29,8 @@ _start:
                                          * image to be used e.g. to store a
                                          * checksum instead. */
 
-#if USEVBR
+#if (defined(mc68010) || defined(mc68020) || defined(mc68030) || \
+     defined(mc68040) || defined(mc68060) || defined(mc68332))
         /* If using a CPU with a VBR, point it to the beginning of ROM */
         movea.l #_rom_base, %a0
         movec   %a0, %vbr
