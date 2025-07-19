@@ -24,7 +24,7 @@ SECTIONS {
     .text : {
         _text_start = .;
         *(.text .text.*)
-        . = ALIGN(2);
+        . = ALIGN(4);
         _text_end = .;
     } > code
 
@@ -32,14 +32,14 @@ SECTIONS {
         _got_start = .;
         *(.got .got.*)
         _got_end = .;
-        . = ALIGN(2);
+        . = ALIGN(4);
     } > code
 
     .data : AT(_got_end) {
         _data_start = .;
         *(.rodata .rodata.*)
         *(.data .data.*)
-        . = ALIGN(2);
+        . = ALIGN(4);
         _data_end = .;
     } > code
 
@@ -47,7 +47,7 @@ SECTIONS {
         _bss_start = .;
         *(.bss .bss.*)
         *(COMMON)
-        . = ALIGN(2);
+        . = ALIGN(4);
         _bss_end = .;
     } > code
 }
