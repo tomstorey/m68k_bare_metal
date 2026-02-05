@@ -14,10 +14,10 @@ typedef struct _block_list
 static block_list_t free_list;
 static block_list_t *free_list_end = NULL;
 
-#define MIN_BLOCK sizeof(block_list_t)  /* Minimum block size is the size of a
-                                           block_list_t */
-#define ALIGN_BYTES 2                   /* Blocks aligned to n bytes */
-#define ALIGN_MASK (-1 << (ALIGN_BYTES - 1))
+#define MIN_BLOCK sizeof(block_list_t)  /* Minimum block size is the size of a block_list_t */
+
+#define ALIGN_BYTES 2                   /* Blocks aligned to n bytes - must be power of 2 */
+#define ALIGN_MASK (~((size_t)ALIGN_BYTES-1))
 
 static void
 heap_init(void)
@@ -107,9 +107,9 @@ malloc(size_t want)
              * it could be turned into another free block, do that
              */
             if ((this_block->size - want) > MIN_BLOCK) {
-                /* Insert new block entry after allocation */
+                /* Insert new free block after allocation */
                 new_block = (void *)this_block + want;
-                new_block->next = free_list_end;
+                new_block->next = this_block->next;
                 new_block->size = (this_block->size - want);
 
                 /* Adjust the pointer of the previous block to point to this
